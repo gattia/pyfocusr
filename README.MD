@@ -5,7 +5,7 @@ FOCUSR = Feature Oriented Correspondence using Spectral Regularization and is de
 
 # Introduction / Background
 
-This package will find correspondence between points on two surfaces using spectral coordinate information to regularize the surface matching. Non-rigid registration between surface points is conduced using Coherent Point Drift (CPD) as described in [2] and impelmented in CyCPD [3]. More recent versions/updated versions of this original algorithm were developed by the original authors [4], [5]
+This package will find correspondence between points on two surfaces using spectral coordinate information to regularize the surface matching. Non-rigid registration between surface points is conducted using Coherent Point Drift (CPD) as described in [2] and impelmented in CyCPD [3]. More recent versions/updated versions of this (spectral alignment/registration) algorithm were developed by the original authors [4], [5] but are not covered here. 
 
 [1] Lombaert H, Grady L, Polimeni JR, Cheriet F. FOCUSR: Feature Oriented Correspondence Using Spectral Regularization--A Method for Precise Surface Matching. IEEE Transactions on Pattern Analysis and Machine Intelligence. 2013;35(9):2143-2160. doi:10.1109/TPAMI.2012.276<br>
 [2] Myronenko A, Xubo Song. Point Set Registration: Coherent Point Drift. IEEE Transactions on Pattern Analysis and Machine Intelligence. 2010;32(12):2262-2275. doi:10.1109/TPAMI.2010.46<br>
