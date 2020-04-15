@@ -1,6 +1,14 @@
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk, vtk_to_numpy
 
+
+def read_vtk_mesh(path_to_file):
+    reader = vtk.vtkPolyDataReader()
+    reader.SetFileName(path_to_file)
+    reader.Update()
+    return reader.GetOutput()
+
+
 def icp_transform(target, source, numberOfIterations=100, number_landmarks=1000):
     icp = vtk.vtkIterativeClosestPointTransform()
     icp.SetTarget(target)

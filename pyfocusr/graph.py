@@ -1,7 +1,9 @@
 import numpy as np
 from scipy.linalg import eigh
 import vtk
+from vtk.util.numpy_support import numpy_to_vtk
 from .vtk_functions import *
+from itkwidgets import Viewer
 
 features_dictionary = {'curvature': get_min_max_curvature_values}
 
@@ -97,5 +99,24 @@ class Graph(object):
     def normalize_point_coordinates(self):
         self.norm_points = (self.points - np.min(self.points, axis=0)) / self.max_points_range
 
+    def view_mesh_existing_scalars(self):
+        plotter = Viewer(geometries=[self.vtk_mesh]
+                         )
+
+        return plotter
+
+    def view_mesh_eig_vec(self, eig_vec=0):
+        tmp_mesh = self.vtk_mesh
+        tmp_mesh.GetPointData().SetScalars(numpy_to_vtk(np.ascontiguousarray(self.eig_vecs[:, eig_vec])))
+        plotter = Viewer(geometries=[tmp_mesh]
+                         )
+        return plotter
+
+    def view_mesh_features(self, feature_idx=0):
+        tmp_mesh = self.vtk_mesh
+        tmp_mesh.GetPointData().SetScalars(numpy_to_vtk(np.ascontiguousarray((self.node_features[feature_idx]))))
+        plotter = Viewer(geometries=[tmp_mesh]
+                         )
+        return plotter
 
 
