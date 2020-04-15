@@ -15,7 +15,8 @@ class Graph(object):
                  norm_eig_vecs=True,
                  norm_points=True,
                  n_rand_samples=10000,
-                 list_features_to_calc=[]):
+                 list_features_to_calc=[],
+                 norm_node_feature=True):
 
         self.vtk_mesh = vtk_mesh
         self.n_points = vtk_mesh.GetNumberOfPoints()
@@ -47,6 +48,14 @@ class Graph(object):
         self.node_features = []
         for feature in list_features_to_calc:
             self.node_features += list(features_dictionary[feature](self.vtk_mesh))
+        if norm_node_feature is True:
+            self.norm_node_features()
+        self.n_features = len(self.node_features)
+
+    def norm_node_features(self):
+        for idx in range(len(self.node_features)):
+            self.node_features[idx] = (self.node_features[idx] - np.min(self.node_features[idx]))\
+                                      / np.ptp(self.node_features[idx])
 
     def get_weighted_adjacency_matrix(self):
         '''
@@ -55,6 +64,13 @@ class Graph(object):
         :return:
         '''
 
+        if self.n_features > 0:
+            max_xyz_range_scaled_features = []
+            for ftr_idx in range(len(self.node_features)):
+                max_xyz_range_scaled_features.append(self.node_features[ftr_idx] * self.max_points_range)
+
+
+
         n_cells = self.vtk_mesh.GetNumberOfCells()
         for cell_idx in range(n_cells):
             cell = self.vtk_mesh.GetCell(cell_idx)
@@ -62,8 +78,17 @@ class Graph(object):
                 edge = cell.GetEdge(edge_idx)
                 point_1 = int(edge.GetPointId(0))
                 point_2 = int(edge.GetPointId(1))
-                distance = np.sqrt(np.sum(np.square(np.asarray(self.vtk_mesh.GetPoint(point_1)) -
-                                                    np.asarray(self.vtk_mesh.GetPoint(point_2)))))
+
+                X_pt1 = np.asarray(self.vtk_mesh.GetPoint(point_1))
+                X_pt2 = np.asarray(self.vtk_mesh.GetPoint(point_2))
+
+                if self.n_features > 0:
+                    for ftr_idx in range(self.n_features):
+                        X_pt1 = np.concatenate((X_pt1, max_xyz_range_scaled_features[ftr_idx][point_1, None]))
+                        X_pt2 = np.concatenate((X_pt2, max_xyz_range_scaled_features[ftr_idx][point_2, None]))
+
+                distance = np.sqrt(np.sum(np.square(X_pt1 -
+                                                    X_pt2)))
                 self.adjacency_matrix[point_1, point_2] = 1. / distance
 
     def get_degree_matrix(self):
