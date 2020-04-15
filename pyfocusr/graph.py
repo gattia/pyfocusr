@@ -1,6 +1,9 @@
 import numpy as np
 from scipy.linalg import eigh
 import vtk
+from .vtk_functions import *
+
+features_dictionary = {'curvature': get_min_max_curvature_values}
 
 
 class Graph(object):
@@ -9,7 +12,8 @@ class Graph(object):
                  n_spectral_features=3,
                  norm_eig_vecs=True,
                  norm_points=True,
-                 n_rand_samples=1000):
+                 n_rand_samples=10000,
+                 list_features_to_calc=[]):
 
         self.vtk_mesh = vtk_mesh
         self.n_points = vtk_mesh.GetNumberOfPoints()
@@ -32,8 +36,15 @@ class Graph(object):
         self.n_spectral_features = n_spectral_features
         self.norm_eig_vecs = norm_eig_vecs
         self.eig_val_gap = None
-        self.n_rand_samples = n_rand_samples
-        self.rand_idxs = np.random.randint(0, self.n_points-1, self.n_rand_samples)
+        if n_rand_samples > self.n_points:
+            self.n_rand_samples = self.n_points
+        elif n_rand_samples <= self.n_points:
+            self.n_rand_samples = n_rand_samples
+        self.rand_idxs = np.random.choice(self.n_points, size=self.n_rand_samples, replace=False)
+
+        self.node_features = []
+        for feature in list_features_to_calc:
+            self.node_features += list(features_dictionary[feature](self.vtk_mesh))
 
     def get_weighted_adjacency_matrix(self):
         '''

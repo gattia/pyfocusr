@@ -16,7 +16,7 @@ class Focusr(object):
                  n_spectral_features=3,
                  n_extra_spectral=3,
                  norm_physical_and_spectral=True,
-                 n_coords_spectral_matching=1000,
+                 n_coords_spectral_matching=10000,
                  rigid_before_non_rigid_reg=True,
                  rigid_reg_max_iterations=100,
                  rigid_tolerance=1e-8,
@@ -25,7 +25,8 @@ class Focusr(object):
                  non_rigid_alpha=0.5,
                  non_rigid_beta=3.0,
                  include_points_as_features=False,
-                 get_weighted_spectral_coords=True):
+                 get_weighted_spectral_coords=True,
+                 list_features_to_calc=['curvature']):
 
         icp = icp_transform(target=vtk_mesh_target, source=vtk_mesh_source)
         vtk_mesh_source = apply_icp_transform(source=vtk_mesh_source, icp=icp)
@@ -42,12 +43,14 @@ class Focusr(object):
 
         self.graph_target = Graph(vtk_mesh_target,
                                   n_spectral_features=self.n_total_spectral_features,
-                                  n_rand_samples=n_coords_spectral_matching
+                                  n_rand_samples=n_coords_spectral_matching,
+                                  list_features_to_calc=list_features_to_calc
                                   )
         self.graph_target.get_graph_spectrum()
         self.graph_source = Graph(vtk_mesh_source,
                                   n_spectral_features=self.n_total_spectral_features,
-                                  n_rand_samples=n_coords_spectral_matching
+                                  n_rand_samples=n_coords_spectral_matching,
+                                  list_features_to_calc=list_features_to_calc
                                   )
         self.graph_source.get_graph_spectrum()
 
@@ -153,7 +156,6 @@ class Focusr(object):
             print('{:6}\t|  {:6}'.format(matched_pair[0], source_value))
         print('*Negative source values means those eigenvectors were flipped*')
         print('')
-        print('=' * 72)
 
 
     def calc_c_lambda(self):
@@ -339,6 +341,7 @@ class Focusr(object):
             print('')
             print('Rigid Registration Beginning')
             print('')
+            print('=' * 72)
             rigid_reg = cycpd.rigid_registration(**{'X':self.target_spectral_coords,
                                                     'Y':self.source_spectral_coords,
                                                     'max_iterations':self.rigid_reg_max_iterations,
