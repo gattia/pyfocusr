@@ -133,15 +133,17 @@ class Focusr(object):
         flipped_pairs = [p2 for p1 in zip(target_flipped, source_flipped) for p2 in zip(target_matches, source_matches) if
                          p2 == p1]
         # Flipped pairs are used to flip the sign of the source eig_vecs.
-        print('Printing Eigenvector Sorting Results')
+
         for mode_0, mode_1 in flipped_pairs:
             self.graph_source.eig_vecs[:, mode_1] = self.graph_source.eig_vecs[:, mode_1] * -1
         # The source eig_vecs are re-ordered to match the order from the target eig_vecs - based on the best matches
         # Identified using Hungarian algorithm (linear_sum_assignment) on the dissimilarity matrix Q.
         self.graph_source.eig_vecs[:, target_matches] = self.graph_source.eig_vecs[:, source_matches]
 
+        print('=' * 72)
+        print('Eigenvector Sorting Results')
         print('')
-        print('The matches/pairs for eigenvectors were as follows:')
+        print('The matches for eigenvectors were as follows:')
         print('Target\t|  Source')
         for matched_pair in zip(target_matches, source_matches):
             if matched_pair in flipped_pairs:
@@ -150,6 +152,8 @@ class Focusr(object):
                 source_value = str(matched_pair[1])
             print('{:6}\t|  {:6}'.format(matched_pair[0], source_value))
         print('*Negative source values means those eigenvectors were flipped*')
+        print('')
+        print('=' * 72)
 
 
     def calc_c_lambda(self):
@@ -331,6 +335,10 @@ class Focusr(object):
         self.source_spectral_coords_before_non_rigid = np.copy(self.source_spectral_coords)
 
         if self.rigid_before_non_rigid_reg is True:
+            print('='*72)
+            print('')
+            print('Rigid Registration Beginning')
+            print('')
             rigid_reg = cycpd.rigid_registration(**{'X':self.target_spectral_coords,
                                                     'Y':self.source_spectral_coords,
                                                     'max_iterations':self.rigid_reg_max_iterations,
@@ -338,7 +346,11 @@ class Focusr(object):
                                                     }
                                                  )
             self.source_spectral_coords, self.rigid_params = rigid_reg.register()
-
+        print('=' * 72)
+        print('')
+        print('Non-Rigid (Deformable) Registration Beginning')
+        print('')
+        print('=' * 72)
         non_rigid_reg = cycpd.deformable_registration(**{'X':self.target_spectral_coords,
                                                          'Y':self.source_spectral_coords,
                                                          'max_iterations':self.non_rigid_max_iterations,
