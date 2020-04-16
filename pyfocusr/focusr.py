@@ -87,6 +87,7 @@ class Focusr(object):
         self.non_rigid_beta = non_rigid_beta
 
         self.source_spectral_coords_before_non_rigid = None
+        self.source_spectral_coords_before_any_reg = None
         self.rigid_params = None
         self.non_rigid_params = None
 
@@ -334,7 +335,7 @@ class Focusr(object):
                                                               * self.graph_target.max_points_range,
                                                               self.graph_target.points), axis=1)
 
-        self.source_spectral_coords_before_non_rigid = np.copy(self.source_spectral_coords)
+        self.source_spectral_coords_before_any_reg = np.copy(self.source_spectral_coords)
 
         if self.rigid_before_non_rigid_reg is True:
             print('='*72)
@@ -349,6 +350,9 @@ class Focusr(object):
                                                     }
                                                  )
             self.source_spectral_coords, self.rigid_params = rigid_reg.register()
+
+        self.source_spectral_coords_before_non_rigid = np.copy(self.source_spectral_coords)
+
         print('=' * 72)
         print('')
         print('Non-Rigid (Deformable) Registration Beginning')
@@ -374,6 +378,7 @@ class Focusr(object):
                                      include_target_coordinates=True,
                                      include_non_rigid_aligned=True,
                                      include_rigid_aligned=False,
+                                     include_unaligned=False,
                                      upscale_factor=10.
                                      ):
         if colour_idx is True:
@@ -388,13 +393,20 @@ class Focusr(object):
         point_sets = []
 
         if include_target_coordinates is True:
-            point_sets.append(upscale_factor * np.ascontiguousarray(self.target_spectral_coords[:, starting_spectral_coord:starting_spectral_coord + 3]))
+            point_sets.append(upscale_factor
+                              * np.ascontiguousarray(self.target_spectral_coords[:, starting_spectral_coord:starting_spectral_coord + 3]))
 
         if include_non_rigid_aligned is True:
-            point_sets.append(upscale_factor * np.ascontiguousarray(self.source_spectral_coords[:, starting_spectral_coord:starting_spectral_coord+3]))
+            point_sets.append(upscale_factor
+                              * np.ascontiguousarray(self.source_spectral_coords[:, starting_spectral_coord:starting_spectral_coord+3]))
 
         if include_rigid_aligned is True:
-            point_sets.append(upscale_factor * np.ascontiguousarray(self.source_spectral_coords_before_non_rigid[:, starting_spectral_coord:starting_spectral_coord + 3]))
+            point_sets.append(upscale_factor
+                              * np.ascontiguousarray(self.source_spectral_coords_before_non_rigid[:, starting_spectral_coord:starting_spectral_coord + 3]))
+
+        if include_unaligned is True:
+            point_sets.append(upscale_factor
+                              * np.ascontiguousarray(self.source_spectral_coords_before_any_reg[:, starting_spectral_coord:starting_spectral_coord + 3]))
 
         plotter = Viewer(point_sets=point_sets,
                          point_set_representations=point_set_representations,

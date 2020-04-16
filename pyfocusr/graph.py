@@ -1,10 +1,10 @@
 import numpy as np
-from scipy.linalg import eigh
-import vtk
+from scipy.sparse.linalg import eigs
+from scipy import sparse
+# import vtk
 from vtk.util.numpy_support import numpy_to_vtk
 from .vtk_functions import *
 from itkwidgets import Viewer
-
 features_dictionary = {'curvature': get_min_max_curvature_values}
 
 
@@ -16,7 +16,8 @@ class Graph(object):
                  norm_points=True,
                  n_rand_samples=10000,
                  list_features_to_calc=[],
-                 norm_node_feature=True):
+                 norm_node_feature=True,
+                 feature_weights=None):
 
         self.vtk_mesh = vtk_mesh
         self.n_points = vtk_mesh.GetNumberOfPoints()
@@ -32,6 +33,7 @@ class Graph(object):
         self.adjacency_matrix = np.zeros((vtk_mesh.GetNumberOfPoints(),
                                           vtk_mesh.GetNumberOfPoints()))
         self.degree_matrix = np.zeros_like(self.adjacency_matrix)
+        self.degree_matrix_inv = np.zeros_like(self.degree_matrix)
         self.laplacian_matrix = np.zeros_like(self.adjacency_matrix)
         self.G = None
         self.eig_vals = None
@@ -52,6 +54,14 @@ class Graph(object):
             self.norm_node_features()
         self.n_features = len(self.node_features)
 
+        self.max_xyz_range_scaled_features = []
+        if self.n_features > 0:
+            for ftr_idx in range(len(self.node_features)):
+                self.max_xyz_range_scaled_features.append(self.node_features[ftr_idx] * self.max_points_range)
+
+        if feature_weights is None:
+            self.feature_weights = np.eye(self.n_features)
+
     def norm_node_features(self):
         for idx in range(len(self.node_features)):
             self.node_features[idx] = (self.node_features[idx] - np.min(self.node_features[idx]))\
@@ -63,13 +73,6 @@ class Graph(object):
         - Add options to enable adding the features
         :return:
         '''
-
-        if self.n_features > 0:
-            max_xyz_range_scaled_features = []
-            for ftr_idx in range(len(self.node_features)):
-                max_xyz_range_scaled_features.append(self.node_features[ftr_idx] * self.max_points_range)
-
-
 
         n_cells = self.vtk_mesh.GetNumberOfCells()
         for cell_idx in range(n_cells):
@@ -84,30 +87,55 @@ class Graph(object):
 
                 if self.n_features > 0:
                     for ftr_idx in range(self.n_features):
-                        X_pt1 = np.concatenate((X_pt1, max_xyz_range_scaled_features[ftr_idx][point_1, None]))
-                        X_pt2 = np.concatenate((X_pt2, max_xyz_range_scaled_features[ftr_idx][point_2, None]))
+                        X_pt1 = np.concatenate((X_pt1, self.max_xyz_range_scaled_features[ftr_idx][point_1, None]))
+                        X_pt2 = np.concatenate((X_pt2, self.max_xyz_range_scaled_features[ftr_idx][point_2, None]))
 
                 distance = np.sqrt(np.sum(np.square(X_pt1 -
                                                     X_pt2)))
                 self.adjacency_matrix[point_1, point_2] = 1. / distance
 
+    def get_G_matrix(self):
+        if self.n_features > 0:
+            self.G = np.zeros(self.n_points)
+            for k in range(self.n_features):
+                # Add up the normalized node _
+                self.G += np.exp(self.node_features[k])
+            self.G = self.G / self.n_features
+            self.G = np.diag(self.G)
+            self.G = np.diag(self.degree_matrix_inv) * self.G
+        elif self.n_features == 0:
+            self.G = self.degree_matrix_inv
+
     def get_degree_matrix(self):
         for i in range(self.adjacency_matrix.shape[0]):
             self.degree_matrix[i, i] = np.sum(self.adjacency_matrix[i, :])
+        self.degree_matrix_inv = np.diag(np.diag(self.degree_matrix)**-1)
 
     def get_laplacian_matrix(self):
+        # Ensure that G is defined.
         if self.G is None:
-            self.laplacian_matrix = self.degree_matrix - self.adjacency_matrix
+            self.G = self.degree_matrix_inv
 
-        elif self.G is not None:
-            self.laplacian_matrix = np.matmul(np.linalg.inv(self.G), (self.degree_matrix - self.adjacency_matrix))
+        self.laplacian_matrix = np.matmul(self.G, (self.degree_matrix - self.adjacency_matrix))
 
     def get_graph_spectrum(self):
         self.get_weighted_adjacency_matrix()
         self.get_degree_matrix()
+        self.get_G_matrix()
         self.get_laplacian_matrix()
 
-        self.eig_vals, self.eig_vecs = eigh(self.laplacian_matrix, eigvals=(1, self.n_spectral_features))
+        # sparse.csc_matrix was faster than sparse.csr_matrix on tests of 5k square matrix.
+        # (359+/- 6.7 ms vs 379 +/- 20.2 ms  including 10 iterations per run and 7 runs).
+        # providing sigma (a value to find eigenvalues near to) slows things down considerably.
+        # providing `ncv` doesnt change things too much (maybe slower if anything).
+        # The sparse versions are even faster than using eigh on a dense matrix.
+        # Therefore, use sparse matrices for all circumstances.
+        laplacian_sparse = sparse.csc_matrix(self.laplacian_matrix)
+        self.eig_vals, self.eig_vecs = eigs(laplacian_sparse,
+                                            k=self.n_spectral_features+1,
+                                            which='SR')
+        self.eig_vals = np.real(self.eig_vals[1: 1 + self.n_spectral_features])
+        self.eig_vecs = np.real(self.eig_vecs[:, 1: 1 + self.n_spectral_features])
         if self.norm_eig_vecs is True:
             self.eig_vecs = (self.eig_vecs - np.min(self.eig_vecs, axis=0)) / np.ptp(self.eig_vecs, axis=0) - 0.5
 
