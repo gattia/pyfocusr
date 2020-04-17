@@ -116,7 +116,7 @@ class Graph(object):
         if self.G is None:
             self.G = self.degree_matrix_inv
 
-        self.laplacian_matrix = np.matmul(self.G, (self.degree_matrix - self.adjacency_matrix))
+        self.laplacian_matrix = self.G @ (self.degree_matrix - self.adjacency_matrix)
 
     def get_graph_spectrum(self):
         print('building adjacency matrix')
@@ -208,9 +208,9 @@ class Graph(object):
         """
         D_inv = np.diag(1./(1+np.sum(self.adjacency_matrix, axis=0)))
         out_values = values
-        average_mat = np.matmul(D_inv, self.adjacency_matrix + np.eye(self.adjacency_matrix.shape[0]))
+        average_mat = D_inv @ (self.adjacency_matrix + np.eye(self.adjacency_matrix.shape[0]))
         for iteration in range(iterations):
-            out_values = np.matmul(average_mat, out_values)
+            out_values = average_mat @ out_values
         return out_values
 
 
