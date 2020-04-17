@@ -16,7 +16,8 @@ class Focusr(object):
                  n_spectral_features=3,
                  n_extra_spectral=3,
                  norm_physical_and_spectral=True,
-                 n_coords_spectral_matching=10000,
+                 n_coords_spectral_ordering=5000,
+                 n_coords_spectral_registration=5000,
                  rigid_before_non_rigid_reg=True,
                  rigid_reg_max_iterations=100,
                  rigid_tolerance=1e-8,
@@ -42,28 +43,29 @@ class Focusr(object):
         # to be in same range as the physical coordinates.
         self.norm_physical_and_spectral = norm_physical_and_spectral
 
+        self.n_coords_spectral_registration = n_coords_spectral_registration
         self.n_spectral_features = n_spectral_features
         self.n_extra_spectral = n_extra_spectral
         self.n_total_spectral_features = self.n_spectral_features + self.n_extra_spectral
 
         self.graph_target = Graph(vtk_mesh_target,
                                   n_spectral_features=self.n_total_spectral_features,
-                                  n_rand_samples=n_coords_spectral_matching,
+                                  n_rand_samples=n_coords_spectral_ordering,
                                   list_features_to_calc=list_features_to_calc,
                                   feature_weights=feature_weights
                                   )
         print('Loaded Mesh 1')
         self.graph_target.get_graph_spectrum()
-        print('Loaded spectrum 1')
+        print('Computed spectrum 1')
         self.graph_source = Graph(vtk_mesh_source,
                                   n_spectral_features=self.n_total_spectral_features,
-                                  n_rand_samples=n_coords_spectral_matching,
+                                  n_rand_samples=n_coords_spectral_ordering,
                                   list_features_to_calc=list_features_to_calc,
                                   feature_weights=feature_weights
                                   )
         print('Loaded Mesh 2')
         self.graph_source.get_graph_spectrum()
-        print('Loaded spectrum 2')
+        print('Computed spectrum 2')
 
         self.rand_target_eig_vecs = None
         self.rand_source_eig_vecs = None
@@ -376,13 +378,15 @@ class Focusr(object):
             print('')
             print('=' * 72)
             # Using affine instead of truly rigid, because rigid doesnt accept >3 dimensions at moment.
-            rigid_reg = cycpd.affine_registration(**{'X': self.target_spectral_coords,
-                                                     'Y': self.source_spectral_coords,
+            rigid_reg = cycpd.affine_registration(**{'X': self.target_spectral_coords[self.graph_target.get_list_rand_idxs(self.n_coords_spectral_registration), :],
+                                                     'Y': self.source_spectral_coords[self.graph_source.get_list_rand_idxs(self.n_coords_spectral_registration), :],
                                                      'max_iterations': self.rigid_reg_max_iterations,
                                                      'tolerance': self.rigid_tolerance
                                                      }
                                                   )
-            self.source_spectral_coords, self.rigid_params = rigid_reg.register()
+            _, self.rigid_params = rigid_reg.register()
+            # Apply transform to all points (ensures all points are transformed even if not all used for registration).
+            self.source_spectral_coords = rigid_reg.transform_point_cloud(self.source_spectral_coords)
 
         self.source_spectral_coords_before_non_rigid = np.copy(self.source_spectral_coords)
 
@@ -391,8 +395,8 @@ class Focusr(object):
         print('Non-Rigid (Deformable) Registration Beginning')
         print('')
         print('=' * 72)
-        non_rigid_reg = cycpd.deformable_registration(**{'X': self.target_spectral_coords,
-                                                         'Y': self.source_spectral_coords,
+        non_rigid_reg = cycpd.deformable_registration(**{'X': self.target_spectral_coords[self.graph_target.get_list_rand_idxs(self.n_coords_spectral_registration), :],
+                                                         'Y': self.source_spectral_coords[self.graph_source.get_list_rand_idxs(self.n_coords_spectral_registration), :],
                                                          'num_eig': self.non_rigid_n_eigens,
                                                          'max_iterations': self.non_rigid_max_iterations,
                                                          'tolerance': self.non_rigid_tolerance,
@@ -400,7 +404,9 @@ class Focusr(object):
                                                          'beta': self.non_rigid_beta
                                                          }
                                                       )
-        self.source_spectral_coords, self.non_rigid_params = non_rigid_reg.register()
+        _, self.non_rigid_params = non_rigid_reg.register()
+        # Apply transform to all points (ensures all points are transformed even if not all used for registration).
+        self.source_spectral_coords = non_rigid_reg.transform_point_cloud(self.source_spectral_coords)
 
         self.get_initial_correspondences()
         if self.smooth_correspondences is True:

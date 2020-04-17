@@ -40,11 +40,7 @@ class Graph(object):
         self.n_spectral_features = n_spectral_features
         self.norm_eig_vecs = norm_eig_vecs
         self.eig_val_gap = None
-        if n_rand_samples > self.n_points:
-            self.n_rand_samples = self.n_points
-        elif n_rand_samples <= self.n_points:
-            self.n_rand_samples = n_rand_samples
-        self.rand_idxs = np.random.choice(self.n_points, size=self.n_rand_samples, replace=False)
+        self.rand_idxs = self.get_list_rand_idxs(n_rand_samples)
 
         self.node_features = []
         for feature in list_features_to_calc:
@@ -213,5 +209,22 @@ class Graph(object):
             out_values = average_mat @ out_values
         return out_values
 
+    def get_list_rand_idxs(self, n_rand_samples, replace=False, force_randomization=False):
+        """
+        Return idxs of random samples
+        - By default do not use replacement (each sample should only be able to be taken one)
+        - If n_rand_samples is more than the number of points, should just return idxs to all points.
+        :param force_randomization:
+        :param n_rand_samples:
+        :param replace:
+        :return:
+        """
+        if n_rand_samples > self.n_points:
+            list_points = np.arange(self.n_points)
+            if force_randomization is True:
+                np.shuffle(list_points)
+            return list_points
+
+        return np.random.choice(self.n_points, size=n_rand_samples, replace=replace)
 
 
