@@ -133,10 +133,22 @@ class Graph(object):
         print('Beginning Eigen Decomposition')
         self.eig_vals, self.eig_vecs = eigs(self.laplacian_matrix,
                                             k=self.n_spectral_features+1,
-                                            sigma=1e-10,
+                                            sigma=1e-8,
                                             which='LM')
-        self.eig_vals = np.real(self.eig_vals[1: 1 + self.n_spectral_features])
-        self.eig_vecs = np.real(self.eig_vecs[:, 1: 1 + self.n_spectral_features])
+        fiedler_idx = None
+        for eig_idx, eig_val in enumerate(self.eig_vals):
+            if eig_val > 1e-8:
+                fiedler_idx = eig_idx
+                break
+        if fiedler_idx is None:
+            raise('No Fiedler!')
+        elif fiedler_idx > 0:
+            self.eig_vals, self.eig_vecs = eigs(self.laplacian_matrix,
+                                                k=self.n_spectral_features + fiedler_idx + 1,
+                                                sigma=1e-8,
+                                                which='LM')
+        self.eig_vals = np.real(self.eig_vals[fiedler_idx + 1:fiedler_idx + 1 + self.n_spectral_features])
+        self.eig_vecs = np.real(self.eig_vecs[:, fiedler_idx + 1:fiedler_idx + 1 + self.n_spectral_features])
         if self.norm_eig_vecs is True:
             self.eig_vecs = (self.eig_vecs - np.min(self.eig_vecs, axis=0)) / np.ptp(self.eig_vecs, axis=0) - 0.5
 
