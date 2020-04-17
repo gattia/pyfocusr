@@ -22,12 +22,12 @@ def icp_transform(target, source, numberOfIterations=100, number_landmarks=1000)
     return icp
 
 
-def apply_icp_transform(source, icp):
-    icp_transform_filter = vtk.vtkTransformPolyDataFilter()
-    icp_transform_filter.SetInputData(source)
-    icp_transform_filter.SetTransform(icp)
-    icp_transform_filter.Update()
-    return icp_transform_filter.GetOutput()
+def apply_transform(source, transform):
+    transform_filter = vtk.vtkTransformPolyDataFilter()
+    transform_filter.SetInputData(source)
+    transform_filter.SetTransform(transform)
+    transform_filter.Update()
+    return transform_filter.GetOutput()
 
 
 def get_node_curvatures(vtk_mesh, curvature_type='min'):

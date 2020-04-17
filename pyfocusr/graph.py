@@ -16,7 +16,6 @@ class Graph(object):
                  norm_points=True,
                  n_rand_samples=10000,
                  list_features_to_calc=[],
-                 norm_node_feature=True,
                  feature_weights=None):
 
         self.vtk_mesh = vtk_mesh
@@ -50,8 +49,7 @@ class Graph(object):
         self.node_features = []
         for feature in list_features_to_calc:
             self.node_features += list(features_dictionary[feature](self.vtk_mesh))
-        if norm_node_feature is True:
-            self.norm_node_features()
+        self.norm_node_features()  # normalize the node features to be in range 0-1, this makes everything else easier
         self.n_features = len(self.node_features)
 
         self.max_xyz_range_scaled_features = []
@@ -87,6 +85,8 @@ class Graph(object):
 
                 if self.n_features > 0:
                     for ftr_idx in range(self.n_features):
+                        # Append the "features" to the x/y/z position. Use features that have been scaled to be in
+                        # the range of the max range axis of xyz.
                         X_pt1 = np.concatenate((X_pt1, self.max_xyz_range_scaled_features[ftr_idx][point_1, None]))
                         X_pt2 = np.concatenate((X_pt2, self.max_xyz_range_scaled_features[ftr_idx][point_2, None]))
 
@@ -99,7 +99,7 @@ class Graph(object):
             self.G = np.zeros(self.n_points)
             for k in range(self.n_features):
                 # Add up the normalized node _
-                self.G += np.exp(self.node_features[k])
+                self.G += self.feature_weights[k, k] * np.exp(self.node_features[k])
             self.G = self.G / self.n_features
             self.G = np.diag(self.G)
             self.G = np.diag(self.degree_matrix_inv) * self.G
@@ -109,7 +109,7 @@ class Graph(object):
     def get_degree_matrix(self):
         for i in range(self.adjacency_matrix.shape[0]):
             self.degree_matrix[i, i] = np.sum(self.adjacency_matrix[i, :])
-        self.degree_matrix_inv = np.diag(np.diag(self.degree_matrix)**-1)
+        self.degree_matrix_inv = np.diag((np.diag(self.degree_matrix) + 1e-8)**-1)
 
     def get_laplacian_matrix(self):
         # Ensure that G is defined.
@@ -119,9 +119,12 @@ class Graph(object):
         self.laplacian_matrix = np.matmul(self.G, (self.degree_matrix - self.adjacency_matrix))
 
     def get_graph_spectrum(self):
+        print('building adjacency matrix')
         self.get_weighted_adjacency_matrix()
+        print('building degree matrix')
         self.get_degree_matrix()
-        self.get_G_matrix()
+        # self.get_G_matrix()
+        print('starting to get laplacian matrix')
         self.get_laplacian_matrix()
 
         # sparse.csc_matrix was faster than sparse.csr_matrix on tests of 5k square matrix.
@@ -131,9 +134,11 @@ class Graph(object):
         # The sparse versions are even faster than using eigh on a dense matrix.
         # Therefore, use sparse matrices for all circumstances.
         laplacian_sparse = sparse.csc_matrix(self.laplacian_matrix)
+        print('beginning eigen decomposition')
         self.eig_vals, self.eig_vecs = eigs(laplacian_sparse,
                                             k=self.n_spectral_features+1,
-                                            which='SR')
+                                            sigma=1e-10,
+                                            which='LM')
         self.eig_vals = np.real(self.eig_vals[1: 1 + self.n_spectral_features])
         self.eig_vecs = np.real(self.eig_vecs[:, 1: 1 + self.n_spectral_features])
         if self.norm_eig_vecs is True:
@@ -171,5 +176,42 @@ class Graph(object):
         plotter = Viewer(geometries=[tmp_mesh]
                          )
         return plotter
+
+    def mean_filter_graph(self, values, iterations=300):
+        """
+        See below for copyright of this particular function:
+        However, note that some changes have been made as the original was in Matlab, and included more options etc.
+
+        Copyright (C) 2002, 2003 Leo Grady <lgrady@cns.bu.edu>
+        Computer Vision and Computational Neuroscience Lab
+        Department of Cognitive and Neural Systems
+        Boston University
+        Boston, MA  02215
+
+        This program is free software; you can redistribute it and/or
+        modify it under the terms of the GNU General Public License
+        as published by the Free Software Foundation; either version 2
+        of the License, or (at your option) any later version.
+
+        This program is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU General Public License for more details.
+
+        You should have received a copy of the GNU General Public License
+        along with this program; if not, write to the Free Software
+        Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+        :param values:
+        :param iterations:
+        :return:
+        """
+        D_inv = np.diag(1./(1+np.sum(self.adjacency_matrix, axis=0)))
+        out_values = values
+        average_mat = np.matmul(D_inv, self.adjacency_matrix + np.eye(self.adjacency_matrix.shape[0]))
+        for iteration in range(iterations):
+            out_values = np.matmul(average_mat, out_values)
+        return out_values
+
 
 
