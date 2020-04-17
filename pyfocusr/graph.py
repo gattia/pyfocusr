@@ -31,8 +31,8 @@ class Graph(object):
 
         self.adjacency_matrix = np.zeros((vtk_mesh.GetNumberOfPoints(),
                                           vtk_mesh.GetNumberOfPoints()))
-        self.degree_matrix = np.zeros_like(self.adjacency_matrix)
-        self.degree_matrix_inv = np.zeros_like(self.degree_matrix)
+        self.degree_matrix = None
+        self.degree_matrix_inv = None
         self.laplacian_matrix = np.zeros_like(self.adjacency_matrix)
         self.G = None
         self.eig_vals = None
@@ -97,15 +97,15 @@ class Graph(object):
                 # Add up the normalized node _
                 self.G += self.feature_weights[k, k] * np.exp(self.node_features[k])
             self.G = self.G / self.n_features
-            self.G = np.diag(self.G)
-            self.G = np.diag(self.degree_matrix_inv) * self.G
+            self.G = sparse.diags(self.G)
+            self.G = self.degree_matrix_inv.diagonal() * self.G
         elif self.n_features == 0:
             self.G = self.degree_matrix_inv
 
     def get_degree_matrix(self):
-        for i in range(self.adjacency_matrix.shape[0]):
-            self.degree_matrix[i, i] = np.sum(self.adjacency_matrix[i, :])
-        self.degree_matrix_inv = np.diag((np.diag(self.degree_matrix) + 1e-8)**-1)
+        self.degree_matrix = self.adjacency_matrix.sum(axis=1)
+        self.degree_matrix = sparse.diags(self.degree_matrix)
+        self.degree_matrix_inv = sparse.diags((self.degree_matrix.diagonal() + 1e-8)**-1)
 
     def get_laplacian_matrix(self):
         # Ensure that G is defined.
