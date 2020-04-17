@@ -29,8 +29,8 @@ class Graph(object):
         else:
             self.norm_points = None
 
-        self.adjacency_matrix = np.zeros((vtk_mesh.GetNumberOfPoints(),
-                                          vtk_mesh.GetNumberOfPoints()))
+        self.adjacency_matrix = sparse.lil_matrix((vtk_mesh.GetNumberOfPoints(),
+                                                   vtk_mesh.GetNumberOfPoints()))
         self.degree_matrix = None
         self.degree_matrix_inv = None
         self.laplacian_matrix = np.zeros_like(self.adjacency_matrix)
@@ -103,8 +103,8 @@ class Graph(object):
             self.G = self.degree_matrix_inv
 
     def get_degree_matrix(self):
-        self.degree_matrix = self.adjacency_matrix.sum(axis=1)
-        self.degree_matrix = sparse.diags(self.degree_matrix)
+        self.degree_matrix = np.asarray(self.adjacency_matrix.sum(axis=1))
+        self.degree_matrix = sparse.diags(self.degree_matrix[:, 0])
         self.degree_matrix_inv = sparse.diags((self.degree_matrix.diagonal() + 1e-8)**-1)
 
     def get_laplacian_matrix(self):
@@ -202,9 +202,9 @@ class Graph(object):
         :param iterations:
         :return:
         """
-        D_inv = np.diag(1./(1+np.sum(self.adjacency_matrix, axis=0)))
+        D_inv = sparse.diags(1. / (1 + np.asarray(self.adjacency_matrix.sum(axis=1))[:, 0]))
         out_values = values
-        average_mat = D_inv @ (self.adjacency_matrix + np.eye(self.adjacency_matrix.shape[0]))
+        average_mat = D_inv @ (self.adjacency_matrix + sparse.eye(self.adjacency_matrix.shape[0]))
         for iteration in range(iterations):
             out_values = average_mat @ out_values
         return out_values
