@@ -33,7 +33,7 @@ class Graph(object):
                                                    vtk_mesh.GetNumberOfPoints()))
         self.degree_matrix = None
         self.degree_matrix_inv = None
-        self.laplacian_matrix = np.zeros_like(self.adjacency_matrix)
+        self.laplacian_matrix = None
         self.G = None
         self.eig_vals = None
         self.eig_vecs = None
@@ -55,6 +55,8 @@ class Graph(object):
 
         if feature_weights is None:
             self.feature_weights = np.eye(self.n_features)
+        else:
+            self.feature_weights = feature_weights
 
     def norm_node_features(self):
         for idx in range(len(self.node_features)):
@@ -98,7 +100,8 @@ class Graph(object):
                 self.G += self.feature_weights[k, k] * np.exp(self.node_features[k])
             self.G = self.G / self.n_features
             self.G = sparse.diags(self.G)
-            self.G = self.degree_matrix_inv.diagonal() * self.G
+            self.G = self.G.multiply(self.degree_matrix_inv.diagonal())
+
         elif self.n_features == 0:
             self.G = self.degree_matrix_inv
 
@@ -111,16 +114,13 @@ class Graph(object):
         # Ensure that G is defined.
         if self.G is None:
             self.G = self.degree_matrix_inv
-
-        self.laplacian_matrix = self.G @ (self.degree_matrix - self.adjacency_matrix)
+        laplacian = self.degree_matrix - self.adjacency_matrix
+        self.laplacian_matrix = self.G @ laplacian
 
     def get_graph_spectrum(self):
-        print('building adjacency matrix')
         self.get_weighted_adjacency_matrix()
-        print('building degree matrix')
         self.get_degree_matrix()
-        # self.get_G_matrix()
-        print('starting to get laplacian matrix')
+        self.get_G_matrix()
         self.get_laplacian_matrix()
 
         # sparse.csc_matrix was faster than sparse.csr_matrix on tests of 5k square matrix.
@@ -129,9 +129,9 @@ class Graph(object):
         # providing `ncv` doesnt change things too much (maybe slower if anything).
         # The sparse versions are even faster than using eigh on a dense matrix.
         # Therefore, use sparse matrices for all circumstances.
-        laplacian_sparse = sparse.csc_matrix(self.laplacian_matrix)
-        print('beginning eigen decomposition')
-        self.eig_vals, self.eig_vecs = eigs(laplacian_sparse,
+        # laplacian_sparse = sparse.csc_matrix(self.laplacian_matrix)
+        print('Beginning Eigen Decomposition')
+        self.eig_vals, self.eig_vecs = eigs(self.laplacian_matrix,
                                             k=self.n_spectral_features+1,
                                             sigma=1e-10,
                                             which='LM')
