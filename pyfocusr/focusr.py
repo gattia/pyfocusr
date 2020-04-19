@@ -16,104 +16,137 @@ class Focusr(object):
     def __init__(self,
                  vtk_mesh_target,
                  vtk_mesh_source,
-                 n_spectral_features=3,
-                 n_extra_spectral=3,
-                 norm_physical_and_spectral=True,
-                 n_coords_spectral_ordering=5000,
-                 n_coords_spectral_registration=5000,
-                 rigid_before_non_rigid_reg=True,
-                 rigid_reg_max_iterations=100,
-                 rigid_tolerance=1e-8,
-                 non_rigid_max_iterations=1000,
-                 non_rigid_tolerance=1e-8,
-                 non_rigid_alpha=0.5,
-                 non_rigid_beta=3.0,
-                 non_rigid_n_eigens=100,
-                 include_points_as_features=False,
-                 get_weighted_spectral_coords=True,
-                 list_features_to_calc=['curvature'],
-                 graph_smoothing_iterations=300,
-                 feature_smoothing_iterations=40,
-                 smooth_correspondences=True,
-                 projection_smooth_iterations=40,
-                 feature_weights=None,
-                 initial_correspondence_type='kd',
-                 final_correspondence_type='hungarian'):
+                 n_spectral_features=3,                 #
+                 n_extra_spectral=3,                    #
+                 norm_physical_and_spectral=True,       #
+                 n_coords_spectral_ordering=5000,       #
+                 n_coords_spectral_registration=5000,   #
+                 rigid_before_non_rigid_reg=True,       #
+                 rigid_reg_max_iterations=100,          #
+                 rigid_tolerance=1e-8,                  #
+                 non_rigid_max_iterations=1000,         #
+                 non_rigid_tolerance=1e-8,              #
+                 non_rigid_alpha=0.5,                   #
+                 non_rigid_beta=3.0,                    #
+                 non_rigid_n_eigens=100,                #
+                 include_points_as_features=False,      #
+                 get_weighted_spectral_coords=True,     #
+                 graph_smoothing_iterations=300,        #
+                 feature_smoothing_iterations=40,       #
+                 smooth_correspondences=True,           #
+                 projection_smooth_iterations=40,       #
+                 feature_weights=None,                  #
+                 initial_correspondence_type='kd',      # 'kd' or 'hungarian'
+                 final_correspondence_type='kd',        #
+                 list_features_to_calc=['curvature'],   # include as input of graph_source & graph_target
+                 include_features_in_adj_matrix=False,  # include as input of graph_source & graph_target
+                 G_matrix_p_function='exp',             # Param for feature processing before laplacian creation
+                 norm_node_features_std=True,           # Param for feature processing before laplacian creation
+                 norm_node_features_cap_std=3,          # Param for feature processing before laplacian creation
+                 norm_node_features_0_1=True            # Param for feature processing before laplacian creation
+                 ):
 
-        icp = icp_transform(target=vtk_mesh_target, source=vtk_mesh_source)
-        vtk_mesh_source = apply_transform(source=vtk_mesh_source, transform=icp)
 
-        self.corresponding_target_idx_for_each_source_pt = None
-        self.initial_correspondence_type = initial_correspondence_type
-        self.final_correspondence_type = final_correspondence_type
 
-        # either normalize all (spectral & points) to be in same range.
-        # Or, normalize the spectral and other values to be in same range as the physical coordinates.
-        self.norm_physical_and_spectral = norm_physical_and_spectral
-
-        self.n_coords_spectral_registration = n_coords_spectral_registration
+        # Inputs
+        #   Spectral coordinates based inputs/parameters
         self.n_spectral_features = n_spectral_features
         self.n_extra_spectral = n_extra_spectral
         self.n_total_spectral_features = self.n_spectral_features + self.n_extra_spectral
 
-        self.graph_target = Graph(vtk_mesh_target,
-                                  n_spectral_features=self.n_total_spectral_features,
-                                  n_rand_samples=n_coords_spectral_ordering,
-                                  list_features_to_calc=list_features_to_calc,
-                                  feature_weights=feature_weights
-                                  )
-        print('Loaded Mesh 1')
-        self.graph_target.get_graph_spectrum()
-        print('Computed spectrum 1')
-        self.graph_source = Graph(vtk_mesh_source,
-                                  n_spectral_features=self.n_total_spectral_features,
-                                  n_rand_samples=n_coords_spectral_ordering,
-                                  list_features_to_calc=list_features_to_calc,
-                                  feature_weights=feature_weights
-                                  )
-        print('Loaded Mesh 2')
-        self.graph_source.get_graph_spectrum()
-        print('Computed spectrum 2')
-
-        # Spectral alignment
-        self.Q = None
-        self.spec_weights = None
-        self.source_spectral_coords = None  # Could pre-allocate using np.zeros()
-        self.target_spectral_coords = None  # Could pre-allocate using np.zeros()
-
+        #   Normalization & what included in registration
+        self.norm_physical_and_spectral = norm_physical_and_spectral  # Bool, norm spect&xyz. Otherwise, spect to xyz.
+        self.include_points_as_features = include_points_as_features  # include xyz coords in registration
         self.get_weighted_spectral_coords = get_weighted_spectral_coords
-
-        self.include_points_as_features = include_points_as_features
-
-        self.source_extra_features = None # Extra features used for mapping
-        self.target_extra_features = None
-
+        self.feature_smoothing_iterations = feature_smoothing_iterations  # number smooth iterations to extra features
+        #   Registration parameters (general)
+        self.n_coords_spectral_registration = n_coords_spectral_registration  # max n points for registration
+        #       Rigid reg params
         self.rigid_before_non_rigid_reg = rigid_before_non_rigid_reg
         self.rigid_reg_max_iterations = rigid_reg_max_iterations
         self.rigid_tolerance = rigid_tolerance
-
+        #       Deformable reg params
         self.non_rigid_max_iterations = non_rigid_max_iterations
         self.non_rigid_tolerance = non_rigid_tolerance
         self.non_rigid_alpha = non_rigid_alpha
         self.non_rigid_beta = non_rigid_beta
         self.non_rigid_n_eigens = non_rigid_n_eigens
+        #   Correspondence selection parameters
+        self.initial_correspondence_type = initial_correspondence_type
+        self.smooth_correspondences = smooth_correspondences  # Bool - smooth values to improve diffeomorphism?
+        self.graph_smoothing_iterations = graph_smoothing_iterations
+        self.projection_smooth_iterations = projection_smooth_iterations  # n iterations projection smoothing
+        self.final_correspondence_type = final_correspondence_type  # 'kd' or 'hungarian' correspondence
 
+        # Prepare Meshes / Graphs
+        #   Rigidly register target to source before beginning.
+        #   This ensures they are in same space for all steps.
+        icp = icp_transform(target=vtk_mesh_target, source=vtk_mesh_source)
+        vtk_mesh_source = apply_transform(source=vtk_mesh_source, transform=icp)
+
+        # Build target graph
+        self.graph_target = Graph(vtk_mesh_target,
+                                  n_spectral_features=self.n_total_spectral_features,
+                                  n_rand_samples=n_coords_spectral_ordering,
+                                  list_features_to_calc=list_features_to_calc,
+                                  feature_weights=feature_weights,
+                                  include_features_in_adj_matrix=include_features_in_adj_matrix,
+                                  G_matrix_p_function=G_matrix_p_function,
+                                  norm_node_features_std=norm_node_features_std,
+                                  norm_node_features_cap_std=norm_node_features_cap_std,
+                                  norm_node_features_0_1=norm_node_features_0_1
+                                  )
+        print('Loaded Mesh 1')
+        # Build target spectrum
+        self.graph_target.get_graph_spectrum()
+        print('Computed spectrum 1')
+        # Build source graph
+        self.graph_source = Graph(vtk_mesh_source,
+                                  n_spectral_features=self.n_total_spectral_features,
+                                  n_rand_samples=n_coords_spectral_ordering,
+                                  list_features_to_calc=list_features_to_calc,
+                                  feature_weights=feature_weights,
+                                  include_features_in_adj_matrix=include_features_in_adj_matrix,
+                                  G_matrix_p_function=G_matrix_p_function,
+                                  norm_node_features_std=norm_node_features_std,
+                                  norm_node_features_cap_std=norm_node_features_cap_std,
+                                  norm_node_features_0_1=norm_node_features_0_1
+                                  )
+        print('Loaded Mesh 2')
+        # Build source spectrum
+        self.graph_source.get_graph_spectrum()
+        print('Computed spectrum 2')
+
+        # Define / specify parameters to be used.
+        # Spectral alignment related
+        self.Q = None
+        self.spec_weights = None
+        self.source_spectral_coords = None  # Could pre-allocate using np.zeros()
+        self.target_spectral_coords = None  # Could pre-allocate using np.zeros()
+
+        # Extra features (curvature etc.)
+        self.source_extra_features = None  # Extra features used for mapping
+        self.target_extra_features = None
+
+        # Saved versions of spectral coords during registration/processing for post-analysis/viewing
         self.source_spectral_coords_after_rigid = None
         self.source_spectral_coords_b4_reg = None
+
+        # saved registration parameters - not currently used for anything. Could be used to transform points after
+        # the fact.
         self.rigid_params = None
         self.non_rigid_params = None
 
-        self.graph_smoothing_iterations = graph_smoothing_iterations
-        self.feature_smoothing_iterations = feature_smoothing_iterations
-        self.smooth_correspondences = smooth_correspondences
-        self.projection_smooth_iterations = projection_smooth_iterations
+        # Results / Correspondences:
 
-        self.smoothed_target_coords = None
-        self.source_projected_on_target = None
+        self.smoothed_target_coords = None       # smoothed coordinates of target - used for final correspondences.
+        self.source_projected_on_target = None   # source values projected on target graph for finding final correspond
+        self.source_vtk_mesh_transformed = None  # source vtk mesh transform to be the shape of target.
+        self.corresponding_target_idx_for_each_source_pt = None  # Final correspondence (target ID for each source pt)
 
-        self.source_vtk_mesh_transformed = None
-
-
+        # NEED TWO MORE OUTSPUTS:
+        # MESH REPRESENTING MEAN OF TWO MESHES
+        # CORRESPONDENCES UPDATE TO BE WEIGHTED AFTER OF 3 CLOSEST POINTS, OR SOMETHING OF THAT EFFECT.
 
     """
     Functions to prepare pointsets to be registered. 
@@ -121,15 +154,15 @@ class Focusr(object):
 
     def append_features_to_spectral_coords(self):
         print('Appending Extra Features to Spectral Coords')
-        if self.graph_source.n_features != self.graph_target.n_features:
+        if self.graph_source.n_extra_features != self.graph_target.n_extra_features:
             raise ('Number of extra features between'
-                   ' target ({}) and source ({}) dont match!'.format(self.graph_target.n_features,
-                                                                     self.graph_source.n_features))
+                   ' target ({}) and source ({}) dont match!'.format(self.graph_target.n_extra_features,
+                                                                     self.graph_source.n_extra_features))
 
-        self.source_extra_features = np.zeros((self.graph_source.n_points, self.graph_source.n_features))
-        self.target_extra_features = np.zeros((self.graph_target.n_points, self.graph_target.n_features))
+        self.source_extra_features = np.zeros((self.graph_source.n_points, self.graph_source.n_extra_features))
+        self.target_extra_features = np.zeros((self.graph_target.n_points, self.graph_target.n_extra_features))
 
-        for feature_idx in range(self.graph_source.n_features):
+        for feature_idx in range(self.graph_source.n_extra_features):
             self.source_extra_features[:, feature_idx] = self.graph_source.mean_filter_graph(
                 self.graph_source.node_features[feature_idx], iterations=self.feature_smoothing_iterations)
             self.target_extra_features[:, feature_idx] = self.graph_target.mean_filter_graph(
@@ -143,9 +176,9 @@ class Focusr(object):
     def append_pts_to_spectral_coords(self):
         if self.norm_physical_and_spectral is True:
             self.source_spectral_coords = np.concatenate((self.source_spectral_coords,
-                                                          self.graph_source.norm_points), axis=1)
+                                                          self.graph_source.normed_points), axis=1)
             self.target_spectral_coords = np.concatenate((self.target_spectral_coords,
-                                                          self.graph_target.norm_points), axis=1)
+                                                          self.graph_target.normed_points), axis=1)
         elif self.norm_physical_and_spectral is False:
             # If we dont scale everything down to be 0-1, then assume that we scale everything up to be the same
             # dimensions/range as the original image.
@@ -170,6 +203,7 @@ class Focusr(object):
                 'beta': self.non_rigid_beta
             }
                                                           )
+            _, self.non_rigid_params = reg.register()
         elif reg_type == 'affine':
             # Using affine instead of truly rigid, because rigid doesnt accept >3 dimensions at moment.
             reg = cycpd.affine_registration(**{
@@ -181,8 +215,8 @@ class Focusr(object):
                 'tolerance': self.rigid_tolerance
             }
                                                   )
+            _, self.rigid_params = reg.register()
 
-        _, self.reg_params = reg.register()
         # Apply transform to all points (ensures all points are transformed even if not all used for registration).
         self.target_spectral_coords = reg.transform_point_cloud(self.target_spectral_coords)
 
@@ -219,7 +253,8 @@ class Focusr(object):
     def get_smoothed_correspondences(self):
         # Smooth the XYZ vertices using adjacency matrix for target
         # This will filter the target points using a low-pass filter
-        self.smoothed_target_coords = self.graph_target.mean_filter_graph(self.graph_target.points, iterations=self.graph_smoothing_iterations)
+        self.smoothed_target_coords = self.graph_target.mean_filter_graph(self.graph_target.points,
+                                                                          iterations=self.graph_smoothing_iterations)
         # Next, we take each of these smoothed points (particularly arranged based on which ones best align with
         # the spectral coordinates of the target mesh) and we smooth these vertices/values using the adjacency/degree
         # matrix of the source mesh. I.e. the target mesh coordinates are smoothed on the surface of the source mesh.
@@ -244,8 +279,9 @@ class Focusr(object):
         tree = KDTree(self.smoothed_target_coords)
 
     """
-    Align Maps
+    Spectral Weighting
     """
+
     def calc_c_weighting_spectral(self):
         """
         calculate spectral weighting coefficient. If 10 spectral coorindates (per point), would calculate
@@ -290,6 +326,10 @@ class Focusr(object):
             self.source_spectral_coords = self.graph_source.eig_vecs[:, :self.n_spectral_features]
             self.target_spectral_coords = self.graph_target.eig_vecs[:, :self.n_spectral_features]
 
+    """
+    Align Maps
+    """
+
     def align_maps(self):
         eig_map_sorter = eigsort(graph_target=self.graph_target,
                                  graph_source=self.graph_source,
@@ -297,7 +337,7 @@ class Focusr(object):
         self.Q = eig_map_sorter.sort_eigenmaps()
         self.calc_spectral_coords()
 
-        if self.graph_source.n_features > 0:
+        if self.graph_source.n_extra_features > 0:
             self.append_features_to_spectral_coords()
 
         if self.include_points_as_features is True:
@@ -326,6 +366,27 @@ class Focusr(object):
                 ))
 
         return self.corresponding_target_idx_for_each_source_pt
+
+    """
+    Change mesh scalar values (for visualizations). 
+    """
+
+    def set_transformed_source_scalars_to_corresp_target_idx(self):
+        self.source_vtk_mesh_transformed.GetPointData().SetScalars(
+            numpy_to_vtk(self.corresponding_target_idx_for_each_source_pt))
+
+    def set_source_scalars_to_corresp_target_idx(self):
+        self.graph_source.vtk_mesh.GetPointData().SetScalars(
+            numpy_to_vtk(self.corresponding_target_idx_for_each_source_pt))
+
+    def set_target_scalars_to_corresp_target_idx(self):
+        self.graph_target.vtk_mesh.GetPointData().SetScalars(
+            numpy_to_vtk(np.arange(self.graph_target.n_points)))
+
+    def set_all_mesh_scalars_to_corresp_target_idx(self):
+        self.set_target_scalars_to_corresp_target_idx()
+        self.set_source_scalars_to_corresp_target_idx()
+        self.set_transformed_source_scalars_to_corresp_target_idx()
 
     """
     Probing & View Results
@@ -409,23 +470,6 @@ class Focusr(object):
         plotter = Viewer(point_sets=[self.smoothed_target_coords, self.source_projected_on_target],
                          point_set_colors=[colors.to_rgb('C0'), colors.to_rgb('C1')])
         return plotter
-
-    def set_transformed_source_scalars_to_corresp_target_idx(self):
-        self.source_vtk_mesh_transformed.GetPointData().SetScalars(
-            numpy_to_vtk(self.corresponding_target_idx_for_each_source_pt))
-
-    def set_source_scalars_to_corresp_target_idx(self):
-        self.graph_source.vtk_mesh.GetPointData().SetScalars(
-            numpy_to_vtk(self.corresponding_target_idx_for_each_source_pt))
-
-    def set_target_scalars_to_corresp_target_idx(self):
-        self.graph_target.vtk_mesh.GetPointData().SetScalars(
-            numpy_to_vtk(np.arange(self.graph_target.n_points)))
-
-    def set_all_mesh_scalars_to_corresp_target_idx(self):
-        self.set_target_scalars_to_corresp_target_idx()
-        self.set_source_scalars_to_corresp_target_idx()
-        self.set_transformed_source_scalars_to_corresp_target_idx()
 
     def view_meshes(self, include_target=True,
                     include_source=True,
