@@ -5,7 +5,9 @@ from scipy import sparse
 from vtk.util.numpy_support import numpy_to_vtk
 from .vtk_functions import *
 from itkwidgets import Viewer
-features_dictionary = {'curvature': get_min_max_curvature_values}
+features_dictionary = {'curvature': get_min_max_curvature_values,
+                       'min_curvature': get_min_curvature,
+                       'max_curvature': get_max_curvature}
 
 
 class Graph(object):
@@ -23,7 +25,10 @@ class Graph(object):
         self.points = np.zeros((self.n_points, 3))
         for point_idx in range(self.n_points):
             self.points[point_idx, :] = self.vtk_mesh.GetPoint(point_idx)
-        self.max_points_range = np.max(np.ptp(self.points, axis=0), axis=0)
+        self.pts_scale_range = np.ptp(self.points, axis=0)
+        self.max_pts_scale_range = np.max(self.pts_scale_range, axis=0)
+        self.mean_pts_scale_range = np.mean(self.pts_scale_range, axis=0)
+
         if norm_points is True:
             self.normalize_point_coordinates()
         else:
@@ -48,20 +53,37 @@ class Graph(object):
         self.norm_node_features()  # normalize the node features to be in range 0-1, this makes everything else easier
         self.n_features = len(self.node_features)
 
-        self.max_xyz_range_scaled_features = []
+        self.mean_xyz_range_scaled_features = []
         if self.n_features > 0:
             for ftr_idx in range(len(self.node_features)):
-                self.max_xyz_range_scaled_features.append(self.node_features[ftr_idx] * self.max_points_range)
+                self.mean_xyz_range_scaled_features.append(self.node_features[ftr_idx] * self.mean_pts_scale_range)
 
         if feature_weights is None:
             self.feature_weights = np.eye(self.n_features)
         else:
             self.feature_weights = feature_weights
 
-    def norm_node_features(self):
+    def norm_node_features(self, norm_using_std=True):
+        """
+        Need multiple methods of normalizing the node_features.
+
+        :param norm_using_std:
+        :return:
+        """
         for idx in range(len(self.node_features)):
-            self.node_features[idx] = (self.node_features[idx] - np.min(self.node_features[idx]))\
-                                      / np.ptp(self.node_features[idx])
+            if norm_using_std is True:
+                self.node_features[idx] = (self.node_features[idx] - np.mean(self.node_features[idx])) \
+                                          / np.std(self.node_features[idx])
+                self.node_features[idx][self.node_features[idx] > 3] = 3
+                self.node_features[idx][self.node_features[idx] < -3] = -3
+                self.node_features[idx] += 4
+                self.node_features[idx] = np.log(self.node_features[idx])
+                self.node_features[idx] -= self.node_features[idx].min()
+                self.node_features[idx] /= self.node_features[idx].max()
+
+            elif norm_using_std is False:
+                self.node_features[idx] = (self.node_features[idx] - np.mean(self.node_features[idx]))\
+                                          / np.ptp(self.node_features[idx])
 
     def get_weighted_adjacency_matrix(self):
         '''
@@ -85,19 +107,22 @@ class Graph(object):
                     for ftr_idx in range(self.n_features):
                         # Append the "features" to the x/y/z position. Use features that have been scaled to be in
                         # the range of the max range axis of xyz.
-                        X_pt1 = np.concatenate((X_pt1, self.max_xyz_range_scaled_features[ftr_idx][point_1, None]))
-                        X_pt2 = np.concatenate((X_pt2, self.max_xyz_range_scaled_features[ftr_idx][point_2, None]))
+                        X_pt1 = np.concatenate((X_pt1, self.mean_xyz_range_scaled_features[ftr_idx][point_1, None]))
+                        X_pt2 = np.concatenate((X_pt2, self.mean_xyz_range_scaled_features[ftr_idx][point_2, None]))
 
                 distance = np.sqrt(np.sum(np.square(X_pt1 -
                                                     X_pt2)))
                 self.adjacency_matrix[point_1, point_2] = 1. / distance
 
-    def get_G_matrix(self):
+    def get_G_matrix(self, exp=True):
         if self.n_features > 0:
             self.G = np.zeros(self.n_points)
             for k in range(self.n_features):
                 # Add up the normalized node _
-                self.G += self.feature_weights[k, k] * np.exp(self.node_features[k])
+                if exp is True:
+                    self.G += self.feature_weights[k, k] * np.exp(self.node_features[k])
+                elif exp is False:
+                    self.G += self.feature_weights[k, k] * self.node_features[k]
             self.G = self.G / self.n_features
             self.G = sparse.diags(self.G)
             self.G = self.G.multiply(self.degree_matrix_inv.diagonal())
@@ -131,24 +156,32 @@ class Graph(object):
         # Therefore, use sparse matrices for all circumstances.
         # laplacian_sparse = sparse.csc_matrix(self.laplacian_matrix)
         print('Beginning Eigen Decomposition')
+
         self.eig_vals, self.eig_vecs = eigs(self.laplacian_matrix,
-                                            k=self.n_spectral_features+1,
-                                            sigma=1e-8,
+                                            k=self.n_spectral_features + 1,
+                                            sigma=1e-10,
                                             which='LM')
-        fiedler_idx = None
+
+        print('Eigen values are: \n{}'.format(np.real(self.eig_vals)))
+
         for eig_idx, eig_val in enumerate(self.eig_vals):
-            if eig_val > 1e-8:
+            if eig_val > 1e-10:
                 fiedler_idx = eig_idx
                 break
-        if fiedler_idx is None:
+        else:
             raise('No Fiedler!')
-        elif fiedler_idx > 0:
+
+        if fiedler_idx > 1:
             self.eig_vals, self.eig_vecs = eigs(self.laplacian_matrix,
                                                 k=self.n_spectral_features + fiedler_idx + 1,
                                                 sigma=1e-8,
                                                 which='LM')
-        self.eig_vals = np.real(self.eig_vals[fiedler_idx + 1:fiedler_idx + 1 + self.n_spectral_features])
-        self.eig_vecs = np.real(self.eig_vecs[:, fiedler_idx + 1:fiedler_idx + 1 + self.n_spectral_features])
+
+            print('Not even eigenvalues!\nSecond set of eigen values are: \n{}'.format(np.real(self.eig_vals)))
+
+        self.eig_vals = np.real(self.eig_vals[fiedler_idx:fiedler_idx + self.n_spectral_features])
+        self.eig_vecs = np.real(self.eig_vecs[:, fiedler_idx:fiedler_idx + self.n_spectral_features])
+
         if self.norm_eig_vecs is True:
             self.eig_vecs = (self.eig_vecs - np.min(self.eig_vecs, axis=0)) / np.ptp(self.eig_vecs, axis=0) - 0.5
 
@@ -163,23 +196,22 @@ class Graph(object):
                / np.ptp(self.points[self.rand_idxs, :], axis=0)
 
     def normalize_point_coordinates(self):
-        self.norm_points = (self.points - np.min(self.points, axis=0)) / self.max_points_range
+        self.norm_points = (self.points - np.min(self.points, axis=0)) / self.mean_pts_scale_range
 
     def view_mesh_existing_scalars(self):
         plotter = Viewer(geometries=[self.vtk_mesh]
                          )
-
         return plotter
 
     def view_mesh_eig_vec(self, eig_vec=0):
-        tmp_mesh = self.vtk_mesh
+        tmp_mesh = vtk_deep_copy(self.vtk_mesh)
         tmp_mesh.GetPointData().SetScalars(numpy_to_vtk(np.ascontiguousarray(self.eig_vecs[:, eig_vec])))
         plotter = Viewer(geometries=[tmp_mesh]
                          )
         return plotter
 
     def view_mesh_features(self, feature_idx=0):
-        tmp_mesh = self.vtk_mesh
+        tmp_mesh = vtk_deep_copy(self.vtk_mesh)
         tmp_mesh.GetPointData().SetScalars(numpy_to_vtk(np.ascontiguousarray((self.node_features[feature_idx]))))
         plotter = Viewer(geometries=[tmp_mesh]
                          )

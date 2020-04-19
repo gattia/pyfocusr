@@ -41,6 +41,14 @@ def get_node_curvatures(vtk_mesh, curvature_type='min'):
     return curvature.GetOutput()
 
 
+def get_max_curvature(vtk_mesh):
+    return [vtk_to_numpy(get_node_curvatures(vtk_mesh, curvature_type='max').GetPointData().GetScalars()),]
+
+
+def get_min_curvature(vtk_mesh):
+    return [vtk_to_numpy(get_node_curvatures(vtk_mesh, curvature_type='min').GetPointData().GetScalars()),]
+
+
 def get_min_max_curvature_values(vtk_mesh):
     min_curvatures = get_node_curvatures(vtk_mesh, curvature_type='min')
     max_curvatures = get_node_curvatures(vtk_mesh, curvature_type='max')
@@ -50,3 +58,9 @@ def get_min_max_curvature_values(vtk_mesh):
 
     return min_curvature_values, max_curvature_values
 
+
+def vtk_deep_copy(mesh):
+    new_mesh = vtk.vtkPolyData()
+    new_mesh.DeepCopy(mesh)
+
+    return new_mesh
