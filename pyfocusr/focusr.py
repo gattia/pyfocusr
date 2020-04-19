@@ -387,7 +387,11 @@ class Focusr(object):
 
         return plotter
 
-    def view_meshes_colored_by_spectral_correspondences(self, x_translation=100, y_translation=0, z_translation=0):
+    def view_meshes_colored_by_spectral_correspondences(self,
+                                                        x_translation=100,
+                                                        y_translation=0,
+                                                        z_translation=0,
+                                                        shadow=True):
         target_mesh = vtk_deep_copy(self.graph_target.vtk_mesh)
         target_mesh.GetPointData().SetScalars(numpy_to_vtk(np.arange(self.graph_target.n_points)))
 
@@ -398,11 +402,12 @@ class Focusr(object):
         target_transform.Translate(x_translation, y_translation, z_translation)
         target_mesh = apply_transform(target_mesh, target_transform)
 
-        plotter = Viewer(geometries=[source_mesh, target_mesh])
+        plotter = Viewer(geometries=[source_mesh, target_mesh], shadow=shadow)
         return plotter
 
     def view_aligned_smoothed_spectral_coords(self):
-        plotter = Viewer(point_sets=[self.smoothed_target_coords, self.source_projected_on_target])
+        plotter = Viewer(point_sets=[self.smoothed_target_coords, self.source_projected_on_target],
+                         point_set_colors=[colors.to_rgb('C0'), colors.to_rgb('C1')])
         return plotter
 
     def set_transformed_source_scalars_to_corresp_target_idx(self):
@@ -425,6 +430,7 @@ class Focusr(object):
     def view_meshes(self, include_target=True,
                     include_source=True,
                     include_transformed_target=False,
+                    shadow=True
                     ):
         geometries = []
         if include_target is True:
@@ -434,11 +440,5 @@ class Focusr(object):
         if include_transformed_target is True:
             geometries.append(self.source_vtk_mesh_transformed)
 
-        plotter = Viewer(geometries=geometries)
+        plotter = Viewer(geometries=geometries, shadow=shadow)
         return plotter
-
-
-
-tableau_colours = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red',
-                   'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray',
-                   'tab:olive', 'tab:cyan']
