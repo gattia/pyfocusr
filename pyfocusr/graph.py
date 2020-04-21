@@ -15,58 +15,78 @@ class Graph(object):
                  vtk_mesh,
                  n_spectral_features=3,
                  norm_eig_vecs=True,
-                 norm_points=True,
                  n_rand_samples=10000,
                  list_features_to_calc=[],
-                 feature_weights=None):
+                 feature_weights=None,
+                 include_features_in_adj_matrix=False,
+                 G_matrix_p_function='exp',
+                 norm_node_features_std=True,
+                 norm_node_features_cap_std=3,
+                 norm_node_features_0_1=True,
+                 ):
 
-        self.vtk_mesh = vtk_mesh
-        self.n_points = vtk_mesh.GetNumberOfPoints()
+        # Inputs
+        self.vtk_mesh = vtk_mesh  # store mesh
+        self.n_spectral_features = n_spectral_features  # number of spectral features to extract.
+        self.norm_eig_vecs = norm_eig_vecs  # Bool - to normalize eigvecs or not. Option, but maybe shouldn't be.
+        self.feature_weights = feature_weights  # Prep feature weights (either set to be input, or create
+        if feature_weights is None:
+            self.feature_weights = np.eye(self.n_extra_features)
+        else:
+            self.feature_weights = feature_weights
+        self.include_features_in_adj_matrix = include_features_in_adj_matrix  # Bool about including features in ajd.
+        self.G_matrix_p_function = G_matrix_p_function
+        #How to normmalize extra features.
+        self.norm_node_features_std = norm_node_features_std
+        self.norm_node_features_cap_std = norm_node_features_cap_std
+        self.norm_node_features_0_1 = norm_node_features_0_1
+
+        # Mesh/points characteristics
+        self.n_points = vtk_mesh.GetNumberOfPoints()  # store number points in mesh.
+        # Iterate over the points saving their 3d location.
         self.points = np.zeros((self.n_points, 3))
         for point_idx in range(self.n_points):
             self.points[point_idx, :] = self.vtk_mesh.GetPoint(point_idx)
-        self.pts_scale_range = np.ptp(self.points, axis=0)
-        self.max_pts_scale_range = np.max(self.pts_scale_range, axis=0)
-        self.mean_pts_scale_range = np.mean(self.pts_scale_range, axis=0)
+        self.pts_scale_range = np.ptp(self.points, axis=0)  # range points in each axis
+        self.max_pts_scale_range = np.max(self.pts_scale_range)  # max range points
+        self.mean_pts_scale_range = np.mean(self.pts_scale_range)  # mean range points (per axis)
+        # create normalized version of point coordinates.
+        self.normed_points = (self.points - np.min(self.points, axis=0)) / self.mean_pts_scale_range
 
-        if norm_points is True:
-            self.normalize_point_coordinates()
-        else:
-            self.norm_points = None
-
-        self.adjacency_matrix = sparse.lil_matrix((vtk_mesh.GetNumberOfPoints(),
-                                                   vtk_mesh.GetNumberOfPoints()))
+        # Assign matrices that will be used for laplacian and eigen decomposition.
+        self.adjacency_matrix = sparse.lil_matrix((vtk_mesh.GetNumberOfPoints(), vtk_mesh.GetNumberOfPoints()))
         self.degree_matrix = None
         self.degree_matrix_inv = None
         self.laplacian_matrix = None
         self.G = None
+
+        # Eigen values that will be calculated & their characteristics.
         self.eig_vals = None
         self.eig_vecs = None
-        self.n_spectral_features = n_spectral_features
-        self.norm_eig_vecs = norm_eig_vecs
         self.eig_val_gap = None
         self.rand_idxs = self.get_list_rand_idxs(n_rand_samples)
 
+        # Calculate node features & store in self.node_features for use.
         self.node_features = []
         for feature in list_features_to_calc:
             self.node_features += list(features_dictionary[feature](self.vtk_mesh))
-        self.norm_node_features()  # normalize the node features to be in range 0-1, this makes everything else easier
-        self.n_features = len(self.node_features)
-
+        # normalize the node features w/ options for how it is normalized.
+        self.norm_node_features(norm_using_std=self.norm_node_features_std,
+                                norm_range_0_to_1=self.norm_node_features_0_1,
+                                cap_std=self.norm_node_features_cap_std)
+        self.n_extra_features = len(self.node_features)  # number of extra features used.
+        # Get version of extra features that are scaled up to the
         self.mean_xyz_range_scaled_features = []
-        if self.n_features > 0:
+        if self.n_extra_features > 0:
             for ftr_idx in range(len(self.node_features)):
                 self.mean_xyz_range_scaled_features.append(self.node_features[ftr_idx] * self.mean_pts_scale_range)
 
-        if feature_weights is None:
-            self.feature_weights = np.eye(self.n_features)
-        else:
-            self.feature_weights = feature_weights
-
-    def norm_node_features(self, norm_using_std=True):
+    def norm_node_features(self, norm_using_std=True, norm_range_0_to_1=True, cap_std=3):
         """
         Need multiple methods of normalizing the node_features.
 
+        :param cap_std:
+        :param norm_range_0_to_1:
         :param norm_using_std:
         :return:
         """
@@ -74,16 +94,17 @@ class Graph(object):
             if norm_using_std is True:
                 self.node_features[idx] = (self.node_features[idx] - np.mean(self.node_features[idx])) \
                                           / np.std(self.node_features[idx])
-                self.node_features[idx][self.node_features[idx] > 3] = 3
-                self.node_features[idx][self.node_features[idx] < -3] = -3
-                self.node_features[idx] += 4
-                self.node_features[idx] = np.log(self.node_features[idx])
-                self.node_features[idx] -= self.node_features[idx].min()
-                self.node_features[idx] /= self.node_features[idx].max()
+                if cap_std is not False:
+                    self.node_features[idx][self.node_features[idx] > cap_std] = cap_std
+                    self.node_features[idx][self.node_features[idx] < -cap_std] = -cap_std
 
-            elif norm_using_std is False:
-                self.node_features[idx] = (self.node_features[idx] - np.mean(self.node_features[idx]))\
+            if norm_range_0_to_1 is True:
+                self.node_features[idx] = (self.node_features[idx] - np.min(self.node_features[idx]))\
                                           / np.ptp(self.node_features[idx])
+
+    """
+    Functions to create matrices needed for laplacian and eigen decomposition. 
+    """
 
     def get_weighted_adjacency_matrix(self):
         '''
@@ -103,8 +124,8 @@ class Graph(object):
                 X_pt1 = np.asarray(self.vtk_mesh.GetPoint(point_1))
                 X_pt2 = np.asarray(self.vtk_mesh.GetPoint(point_2))
 
-                if self.n_features > 0:
-                    for ftr_idx in range(self.n_features):
+                if (self.n_extra_features > 0) & (self.include_features_in_adj_matrix is True):
+                    for ftr_idx in range(self.n_extra_features):
                         # Append the "features" to the x/y/z position. Use features that have been scaled to be in
                         # the range of the max range axis of xyz.
                         X_pt1 = np.concatenate((X_pt1, self.mean_xyz_range_scaled_features[ftr_idx][point_1, None]))
@@ -114,20 +135,39 @@ class Graph(object):
                                                     X_pt2)))
                 self.adjacency_matrix[point_1, point_2] = 1. / distance
 
-    def get_G_matrix(self, exp=True):
-        if self.n_features > 0:
+    def get_G_matrix(self, p_function='exp'):
+        """
+        Get G matrix for creating laplacian laplacian = G * (D-W)
+        p_function options include:
+            - exp
+            - log
+            - square
+            -otherwise just make sure it is 0 or higher.
+        :param p_function:
+        :return:
+        """
+        if self.n_extra_features > 0:
             self.G = np.zeros(self.n_points)
-            for k in range(self.n_features):
+            for k in range(self.n_extra_features):
                 # Add up the normalized node _
-                if exp is True:
-                    self.G += self.feature_weights[k, k] * np.exp(self.node_features[k])
-                elif exp is False:
-                    self.G += self.feature_weights[k, k] * self.node_features[k]
-            self.G = self.G / self.n_features
+                if p_function == 'exp':
+                    G = np.exp(self.node_features[k])
+                elif p_function == 'log':
+                    # use log function. Ensure that all values are above zero (make it 1 and up).
+                    G = np.log(self.node_features[k] - np.min(self.node_features[k]) + 1)
+                elif p_function == 'square':
+                    G = self.node_features[k]**2
+                else:
+                    # Otherwise, just ensure features are 0 and higher.
+                    G = self.node_features[k] - np.min(self.node_features[k])
+                # Scale features to be in range of degree_matrix. Then, multople by the feature weighting.
+                G_scaling = self.feature_weights[k, k] * np.ptp(self.degree_matrix) / np.ptp(G)
+                self.G += G * G_scaling  # Add scaled feature values to to G matrix.
+            self.G = self.G / self.n_extra_features  # Get average self.G across features.
             self.G = sparse.diags(self.G)
             self.G = self.G.multiply(self.degree_matrix_inv.diagonal())
 
-        elif self.n_features == 0:
+        elif self.n_extra_features == 0:
             self.G = self.degree_matrix_inv
 
     def get_degree_matrix(self):
@@ -145,7 +185,7 @@ class Graph(object):
     def get_graph_spectrum(self):
         self.get_weighted_adjacency_matrix()
         self.get_degree_matrix()
-        self.get_G_matrix()
+        self.get_G_matrix(p_function=self.G_matrix_p_function)
         self.get_laplacian_matrix()
 
         # sparse.csc_matrix was faster than sparse.csr_matrix on tests of 5k square matrix.
@@ -156,14 +196,11 @@ class Graph(object):
         # Therefore, use sparse matrices for all circumstances.
         # laplacian_sparse = sparse.csc_matrix(self.laplacian_matrix)
         print('Beginning Eigen Decomposition')
-
         self.eig_vals, self.eig_vecs = eigs(self.laplacian_matrix,
                                             k=self.n_spectral_features + 1,
                                             sigma=1e-10,
                                             which='LM')
-
         print('Eigen values are: \n{}'.format(np.real(self.eig_vals)))
-
         for eig_idx, eig_val in enumerate(self.eig_vals):
             if eig_val > 1e-10:
                 fiedler_idx = eig_idx
@@ -177,13 +214,17 @@ class Graph(object):
                                                 sigma=1e-8,
                                                 which='LM')
 
-            print('Not even eigenvalues!\nSecond set of eigen values are: \n{}'.format(np.real(self.eig_vals)))
+            print('Not enough eigenvalues!\nSecond set of eigen values are: \n{}'.format(np.real(self.eig_vals)))
 
         self.eig_vals = np.real(self.eig_vals[fiedler_idx:fiedler_idx + self.n_spectral_features])
         self.eig_vecs = np.real(self.eig_vecs[:, fiedler_idx:fiedler_idx + self.n_spectral_features])
 
         if self.norm_eig_vecs is True:
             self.eig_vecs = (self.eig_vecs - np.min(self.eig_vecs, axis=0)) / np.ptp(self.eig_vecs, axis=0) - 0.5
+
+    """
+    Get sub samples/measurements from/of eigenvectors or characteristics about them. 
+    """
 
     def get_eig_val_gap(self):
         self.eig_val_gap = np.mean(np.diff(self.eig_vals))
@@ -195,8 +236,27 @@ class Graph(object):
         return (self.points[self.rand_idxs, :] - np.min(self.points[self.rand_idxs, :], axis=0)) \
                / np.ptp(self.points[self.rand_idxs, :], axis=0)
 
-    def normalize_point_coordinates(self):
-        self.norm_points = (self.points - np.min(self.points, axis=0)) / self.mean_pts_scale_range
+    def get_list_rand_idxs(self, n_rand_samples, replace=False, force_randomization=False):
+        """
+        Return idxs of random samples
+        - By default do not use replacement (each sample should only be able to be taken one)
+        - If n_rand_samples is more than the number of points, should just return idxs to all points.
+        :param force_randomization:
+        :param n_rand_samples:
+        :param replace:
+        :return:
+        """
+        if n_rand_samples > self.n_points:
+            list_points = np.arange(self.n_points)
+            if force_randomization is True:
+                np.shuffle(list_points)
+            return list_points
+
+        return np.random.choice(self.n_points, size=n_rand_samples, replace=replace)
+
+    """
+    View meshes/points/results. 
+    """
 
     def view_mesh_existing_scalars(self):
         plotter = Viewer(geometries=[self.vtk_mesh]
@@ -216,6 +276,10 @@ class Graph(object):
         plotter = Viewer(geometries=[tmp_mesh]
                          )
         return plotter
+
+    """
+    Filter graph f(x)s 
+    """
 
     def mean_filter_graph(self, values, iterations=300):
         """
@@ -252,23 +316,4 @@ class Graph(object):
         for iteration in range(iterations):
             out_values = average_mat @ out_values
         return out_values
-
-    def get_list_rand_idxs(self, n_rand_samples, replace=False, force_randomization=False):
-        """
-        Return idxs of random samples
-        - By default do not use replacement (each sample should only be able to be taken one)
-        - If n_rand_samples is more than the number of points, should just return idxs to all points.
-        :param force_randomization:
-        :param n_rand_samples:
-        :param replace:
-        :return:
-        """
-        if n_rand_samples > self.n_points:
-            list_points = np.arange(self.n_points)
-            if force_randomization is True:
-                np.shuffle(list_points)
-            return list_points
-
-        return np.random.choice(self.n_points, size=n_rand_samples, replace=replace)
-
 
