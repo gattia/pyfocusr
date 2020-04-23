@@ -41,18 +41,18 @@ Normalized spectral coordinates (eigenvectors) are calculated for each mesh. Bel
 ![](/images/eig_vec_3.png)
 
 
-Next, the spectral coordinates (eigenvectors) for each node of the mesh (shown above) are used as xyz positions and are aligned. The following shows the meshes before and after the regsistration as well as one mesh calculated as the average of the source & target. 
+Next, the spectral coordinates (eigenvectors) for each node of the mesh (shown above) are used as xyz positions and are aligned. 
 #### 
 ![](/images/ezgif.com-gif-maker.gif)
 
 
-Source Mesh                                   |  Target Mesh
-:--------------------------------------------:|:-------------------------:
-![](/images/source.png)                       |  ![](/images/target.png) 
+The following includes the meshes at various steps of the registration process as well as one mesh calculated as the average of the source & target. 
 
-Source Transformed to Target                  |  Average Mesh
-:--------------------------------------------:|:------------------------------:
-| ![](/images/mesh_transformed_to_target.png) | ![](/images/average_mesh.png)
+|*Source Mesh* | *Target Mesh* |
+|:---:       |:---:        |
+|![](/images/source.png)   | ![](/images/target.png) |g
+|*Source Transformed to Target*               | *Average Mesh*                |
+| ![](/images/mesh_transformed_to_target.png) | ![](/images/average_mesh.png) |
 
 
 MIT License.
