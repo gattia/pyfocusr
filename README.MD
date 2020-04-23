@@ -33,7 +33,7 @@ Jupyter notebook *Example_registering_two_bone_meshes*  in /examples shows exten
 ### Spectral coordinates
 Normalized spectral coordinates (eigenvectors) are calculated for each mesh. Below shows examples for the first 3 eigenvectors. 
 
-| *Eigen Vector 1\nFiedler vector*    | *Eigen Vector 2*           | *Eigen Vector 3*           |
+| *Eigen Vector 1 - Fiedler vector*    | *Eigen Vector 2*           | *Eigen Vector 3*           |
 | :---:                               | :---:                      | :---:                      |
 |![](/images/eig_vec_1_fiedler.png)   | ![](/images/eig_vec_2.png) | ![](/images/eig_vec_3.png) |
 
