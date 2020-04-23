@@ -34,6 +34,9 @@ class Focusr(object):
                  graph_smoothing_iterations=300,        #
                  feature_smoothing_iterations=40,       #
                  smooth_correspondences=True,           #
+                 return_average_final_points=True,      # should we create diffused/weighted new points
+                 return_nearest_final_points=True,      # should we create nearest neighbor new points.
+                 return_transformed_mesh=True,          #
                  projection_smooth_iterations=40,       #
                  feature_weights=None,                  #
                  initial_correspondence_type='kd',      # 'kd' or 'hungarian'
@@ -45,8 +48,6 @@ class Focusr(object):
                  norm_node_features_cap_std=3,          # Param for feature processing before laplacian creation
                  norm_node_features_0_1=True            # Param for feature processing before laplacian creation
                  ):
-
-
 
         # Inputs
         #   Spectral coordinates based inputs/parameters
@@ -74,9 +75,12 @@ class Focusr(object):
         #   Correspondence selection parameters
         self.initial_correspondence_type = initial_correspondence_type
         self.smooth_correspondences = smooth_correspondences  # Bool - smooth values to improve diffeomorphism?
+        self.return_average_final_points = return_average_final_points  # make weighted avg final xyz position?
+        self.return_nearest_final_points = return_nearest_final_points  # make nearest neighbour final xyz position?
         self.graph_smoothing_iterations = graph_smoothing_iterations
         self.projection_smooth_iterations = projection_smooth_iterations  # n iterations projection smoothing
         self.final_correspondence_type = final_correspondence_type  # 'kd' or 'hungarian' correspondence
+        self.return_transformed_mesh = return_transformed_mesh  # bool to tell if we should create new mesh.
 
         # Prepare Meshes / Graphs
         #   Rigidly register target to source before beginning.
@@ -141,12 +145,16 @@ class Focusr(object):
 
         self.smoothed_target_coords = None       # smoothed coordinates of target - used for final correspondences.
         self.source_projected_on_target = None   # source values projected on target graph for finding final correspond
-        self.source_vtk_mesh_transformed = None  # source vtk mesh transform to be the shape of target.
+        self.weighted_avg_transformed_mesh = None  # source mesh transformed to target w/ weighted avg.
+        self.nearest_neighbour_transformed_mesh = None  # source mesh transformed to target w/ nearest neighbour
         self.corresponding_target_idx_for_each_source_pt = None  # Final correspondence (target ID for each source pt)
-
-        # NEED TWO MORE OUTSPUTS:
+        self.nearest_neighbor_transformed_points = None  # location source points move on target as nearest neighbor.
+        self.weighted_avg_transformed_points = None  # location source points move on the target mesh as weighted avg.
+        self.average_mesh = None  # average of the two meshes (based on the correspondences).
+        # self.nearest_neighbour_transformed_mesh = None
+        # self.weighted_avg_transformed_mesh = None
+        # NEED ONE MORE OUTSPUTS:
         # MESH REPRESENTING MEAN OF TWO MESHES
-        # CORRESPONDENCES UPDATE TO BE WEIGHTED AFTER OF 3 CLOSEST POINTS, OR SOMETHING OF THAT EFFECT.
 
     """
     Functions to prepare pointsets to be registered. 
@@ -269,14 +277,47 @@ class Focusr(object):
         # This now matches/makes correspondences. Can use this correspondence.
         # Or can associate with points in between these points...
 
-    def set_position_centroid_closest_n_points(self):
+    def get_weighted_final_node_locations(self, n_closest_pts=3):
         """
-        Interpolate position(s) of final coordinates of source mesh on the surface (between points) on the target mesh.
-
-        Project onto plane created by three closest points?
+        Disperse points (from source) over the target mesh surface - distribute them instead of just finding the
+        closest point.
         :return:
         """
+        self.weighted_avg_transformed_points = np.zeros_like(self.graph_source.points)
+
         tree = KDTree(self.smoothed_target_coords)
+        for pt_idx in range(self.graph_source.n_points):
+            closest_pt_distances, closest_pt_idxs = tree.query(self.source_projected_on_target[pt_idx, :],
+                                                               k=n_closest_pts)
+            weighting = 1 / closest_pt_distances[:, None]
+            avg_location = np.sum(self.graph_target.points[closest_pt_idxs, :] * weighting, axis=0) / (sum(weighting))
+            self.weighted_avg_transformed_points[pt_idx, :] = avg_location
+
+    def get_nearest_neighbour_final_node_locations(self):
+        self.nearest_neighbor_transformed_points = self.graph_target.points[self.corresponding_target_idx_for_each_source_pt, :]
+
+    def get_average_shape(self, align_type='weighted'):
+        """
+        Get new mesh average of the transformed source & target.
+        :return:
+        """
+        self.average_mesh = vtk_deep_copy(self.graph_source.vtk_mesh)
+
+        points = self.average_mesh.GetPoints()
+        if align_type == 'nearest':
+            for src_pt_idx in range(self.graph_source.n_points):
+                trget_pt_idx = self.corresponding_target_idx_for_each_source_pt[src_pt_idx]
+                new_xyz = self.graph_target.vtk_mesh.GetPoint(trget_pt_idx)
+                orig_xyz = self.graph_source.points[src_pt_idx]
+                mean_xyz = (orig_xyz + new_xyz) / 2
+                points.SetPoint(src_pt_idx, mean_xyz)
+        elif align_type == 'weighted':
+            for src_pt_idx in range(self.graph_source.n_points):
+                orig_xyz = self.weighted_avg_transformed_points[src_pt_idx]
+                new_xyz = self.graph_source.points[src_pt_idx]
+                mean_xyz = (orig_xyz + new_xyz) / 2
+                points.SetPoint(src_pt_idx, mean_xyz)
+
 
     """
     Spectral Weighting
@@ -365,14 +406,29 @@ class Focusr(object):
                 len(np.unique(self.corresponding_target_idx_for_each_source_pt))
                 ))
 
-        return self.corresponding_target_idx_for_each_source_pt
+        if self.return_average_final_points is True:
+            self.get_weighted_final_node_locations()
+        if self.return_nearest_final_points is True:
+            self.get_nearest_neighbour_final_node_locations()
+
+        if self.return_transformed_mesh is True:
+            if self.return_average_final_points is True:
+                self.get_source_mesh_transformed_weighted_avg()
+            if self.return_nearest_final_points is True:
+                self.get_source_mesh_transformed_nearest_neighbour()
+
+        # return self.corresponding_target_idx_for_each_source_pt
 
     """
     Change mesh scalar values (for visualizations). 
     """
 
     def set_transformed_source_scalars_to_corresp_target_idx(self):
-        self.source_vtk_mesh_transformed.GetPointData().SetScalars(
+        if self.weighted_avg_transformed_mesh is not None:
+            self.weighted_avg_transformed_mesh.GetPointData().SetScalars(
+            numpy_to_vtk(self.corresponding_target_idx_for_each_source_pt))
+        if self.nearest_neighbour_transformed_mesh is not None:
+            self.nearest_neighbour_transformed_mesh.GetPointData().SetScalars(
             numpy_to_vtk(self.corresponding_target_idx_for_each_source_pt))
 
     def set_source_scalars_to_corresp_target_idx(self):
@@ -391,20 +447,47 @@ class Focusr(object):
     """
     Probing & View Results
     """
-
-    def get_source_mesh_transformed(self):
+    def get_source_mesh_transformed_weighted_avg(self):
         """
         Create new mesh same as source mesh. Get source points. Move source points to transformed location(s) on
-        target mesh.
+        target mesh using weighted average locations.
         :return:
         """
-        self.source_vtk_mesh_transformed = vtk_deep_copy(self.graph_source.vtk_mesh)
-
-        points = self.source_vtk_mesh_transformed.GetPoints()
+        self.weighted_avg_transformed_mesh = vtk_deep_copy(self.graph_source.vtk_mesh)
+        points = self.weighted_avg_transformed_mesh.GetPoints()
         for src_pt_idx in range(self.graph_source.n_points):
-            trget_pt_idx = self.corresponding_target_idx_for_each_source_pt[src_pt_idx]
-            trget_pt_xyz = self.graph_target.vtk_mesh.GetPoint(trget_pt_idx)
-            points.SetPoint(src_pt_idx, trget_pt_xyz)
+            points.SetPoint(src_pt_idx, self.weighted_avg_transformed_points[src_pt_idx])
+
+    def get_source_mesh_transformed_nearest_neighbour(self):
+        """
+        Create new mesh same as source mesh. Get source points. Move source points to transformed location(s) on
+        target mesh using nearest neighbour locations.
+        :return:
+        """
+        self.nearest_neighbour_transformed_mesh = vtk_deep_copy(self.graph_source.vtk_mesh)
+        points = self.nearest_neighbour_transformed_mesh.GetPoints()
+        for src_pt_idx in range(self.graph_source.n_points):
+            points.SetPoint(src_pt_idx, self.nearest_neighbor_transformed_points[src_pt_idx])
+
+    # def get_source_mesh_transformed(self):
+    #     """
+    #     Create new mesh same as source mesh. Get source points. Move source points to transformed location(s) on
+    #     target mesh.
+    #     :return:
+    #     """
+    #     self.source_vtk_mesh_transformed = vtk_deep_copy(self.graph_source.vtk_mesh)
+    #     points = self.source_vtk_mesh_transformed.GetPoints()
+    #
+    #     points = self.source_vtk_mesh_transformed.GetPoints()
+    #     if self.diffuse_final_points is False:
+    #         for src_pt_idx in range(self.graph_source.n_points):
+    #             trget_pt_idx = self.corresponding_target_idx_for_each_source_pt[src_pt_idx]
+    #             trget_pt_xyz = self.graph_target.vtk_mesh.GetPoint(trget_pt_idx)
+    #             points.SetPoint(src_pt_idx, trget_pt_xyz)
+    #     elif self.diffuse_final_points is True:
+    #         for src_pt_idx in range(self.graph_source.n_points):
+    #             points.SetPoint(src_pt_idx, self.weighted_avg_transformed_points[src_pt_idx])
+
 
     def view_aligned_spectral_coords(self, starting_spectral_coord=0,
                                      point_set_representations=['spheres'],
@@ -474,6 +557,7 @@ class Focusr(object):
     def view_meshes(self, include_target=True,
                     include_source=True,
                     include_transformed_target=False,
+                    include_average=False,
                     shadow=True
                     ):
         geometries = []
@@ -482,7 +566,34 @@ class Focusr(object):
         if include_source is True:
             geometries.append(self.graph_source.vtk_mesh)
         if include_transformed_target is True:
-            geometries.append(self.source_vtk_mesh_transformed)
+            if self.weighted_avg_transformed_mesh is not None:
+                geometries.append(self.weighted_avg_transformed_mesh)
+            elif self.nearest_neighbour_transformed_mesh is not None:
+                geometries.append(self.nearest_neighbour_transformed_mesh)
+            elif self.weighted_avg_transformed_points is not None:
+                self.get_weighted_final_node_locations()
+                self.get_source_mesh_transformed_weighted_avg()
+                geometries.append(self.weighted_avg_transformed_mesh)
+            elif self.nearest_neighbor_transformed_points is not None:
+                self.get_nearest_neighbour_final_node_locations()
+                self.get_source_mesh_transformed_nearest_neighbour()
+                geometries.append(self.nearest_neighbour_transformed_mesh)
+            else:
+                raise('No corresponding points or meshes calculated. Try running: \n'
+                      'reg.get_weighted_final_node_locations()\n'
+                      'reg.get_nearest_neighbour_final_node_locations()\n'
+                      'or try re-running with the flags: \n'
+                      'return_average_final_points=True & return_transformed_mesh=True')
+        if include_average is True:
+            if self.average_mesh is None:
+                if self.weighted_avg_transformed_points is not None:
+                    self.get_average_shape()
+                elif self.nearest_neighbor_transformed_points is not None:
+                    self.get_average_shape(align_type='nearest')
+                else:
+                    raise("No xyz correspondences calculated can't get average! Try:\n"
+                          "`reg.get_weighted_final_node_locations` or `reg.get_nearest_neighbour_final_node_locations`")
+            geometries.append(self.average_mesh)
 
         plotter = Viewer(geometries=geometries, shadow=shadow)
         return plotter
