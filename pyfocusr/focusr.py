@@ -309,7 +309,7 @@ class Focusr(object):
             closest_pt_distances, closest_pt_idxs = tree.query(self.source_projected_on_target[pt_idx, :],
                                                                k=n_closest_pts)
 
-            if 0 in closest_pt_idxs:
+            if 0 in closest_pt_distances:
                 idx_coincident = np.where(closest_pt_distances == 0)[0][0]
                 self.weighted_avg_transformed_points[pt_idx, :] = self.graph_target.points[closest_pt_idxs[idx_coincident]]
             else:
