@@ -350,6 +350,7 @@ def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
                       k_buffer=k_buffer,
                       sigma=sigma,
                       which=which)
+    print('Finished for else')
     if fiedler_idx > (k - n_k_needed):  # If the fiedler_idx too high to allow extraction of enough eigs restart.
         print('Fiedler found, not enough eig_vals - Restarting')
         recursive_eig(matrix,
