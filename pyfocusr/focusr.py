@@ -16,6 +16,8 @@ class Focusr(object):
     def __init__(self,
                  vtk_mesh_target,
                  vtk_mesh_source,
+                 icp_register_first=True,               # bool, should register meshes together first
+                 icp_registration_mode='rigid',         # str - should icp reg be rigid or similarity (rigid + scale)
                  n_spectral_features=3,                 #
                  n_extra_spectral=3,                    #
                  norm_physical_and_spectral=True,       #
@@ -85,8 +87,12 @@ class Focusr(object):
         # Prepare Meshes / Graphs
         #   Rigidly register target to source before beginning.
         #   This ensures they are in same space for all steps.
-        icp = icp_transform(target=vtk_mesh_target, source=vtk_mesh_source)
-        vtk_mesh_source = apply_transform(source=vtk_mesh_source, transform=icp)
+        if icp_register_first is True:
+            if icp_registration_mode == 'rigid':
+                icp = icp_transform(target=vtk_mesh_target, source=vtk_mesh_source, transform_mode='rigid')
+            elif icp_registration_mode == 'similarity':
+                icp = icp_transform(target=vtk_mesh_target, source=vtk_mesh_source, transform_mode='similarity')
+            vtk_mesh_source = apply_transform(source=vtk_mesh_source, transform=icp)
 
         # Build target graph
         self.graph_target = Graph(vtk_mesh_target,
@@ -266,6 +272,8 @@ class Focusr(object):
         # Next, we take each of these smoothed points (particularly arranged based on which ones best align with
         # the spectral coordinates of the target mesh) and we smooth these vertices/values using the adjacency/degree
         # matrix of the source mesh. I.e. the target mesh coordinates are smoothed on the surface of the source mesh.
+        if self.smoothed_target_coords.shape[0] > self.graph_source.n_points:
+            source_points_to_register
         self.source_projected_on_target = self.graph_source.mean_filter_graph(self.smoothed_target_coords[self.corresponding_target_idx_for_each_source_pt, :],
                                                                               iterations=self.projection_smooth_iterations)
 
