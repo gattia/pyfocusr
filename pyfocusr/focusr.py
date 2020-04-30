@@ -308,9 +308,15 @@ class Focusr(object):
         for pt_idx in range(self.graph_source.n_points):
             closest_pt_distances, closest_pt_idxs = tree.query(self.source_projected_on_target[pt_idx, :],
                                                                k=n_closest_pts)
-            weighting = 1 / closest_pt_distances[:, None]
-            avg_location = np.sum(self.graph_target.points[closest_pt_idxs, :] * weighting, axis=0) / (sum(weighting))
-            self.weighted_avg_transformed_points[pt_idx, :] = avg_location
+
+            if 0 in closest_pt_idxs:
+                idx_coincident = np.where(closest_pt_distances == 0)[0][0]
+                self.weighted_avg_transformed_points[pt_idx, :] = self.graph_target.points[closest_pt_idxs[idx_coincident]]
+            else:
+                weighting = 1 / closest_pt_distances[:, None]
+
+                avg_location = np.sum(self.graph_target.points[closest_pt_idxs, :] * weighting, axis=0) / (sum(weighting))
+                self.weighted_avg_transformed_points[pt_idx, :] = avg_location
 
     def get_nearest_neighbour_final_node_locations(self):
         self.nearest_neighbor_transformed_points = self.graph_target.points[self.corresponding_target_idx_for_each_source_pt, :]
