@@ -180,9 +180,9 @@ class Focusr(object):
     def append_features_to_spectral_coords(self):
         print('Appending Extra Features to Spectral Coords')
         if self.graph_source.n_extra_features != self.graph_target.n_extra_features:
-            raise ('Number of extra features between'
-                   ' target ({}) and source ({}) dont match!'.format(self.graph_target.n_extra_features,
-                                                                     self.graph_source.n_extra_features))
+            raise Exception('Number of extra features between'
+                            ' target ({}) and source ({}) dont match!'.format(self.graph_target.n_extra_features,
+                                                                              self.graph_source.n_extra_features))
 
         self.source_extra_features = np.zeros((self.graph_source.n_points, self.graph_source.n_extra_features))
         self.target_extra_features = np.zeros((self.graph_target.n_points, self.graph_target.n_extra_features))
@@ -604,11 +604,11 @@ class Focusr(object):
                 self.get_source_mesh_transformed_nearest_neighbour()
                 geometries.append(self.nearest_neighbour_transformed_mesh)
             else:
-                raise('No corresponding points or meshes calculated. Try running: \n'
-                      'reg.get_weighted_final_node_locations()\n'
-                      'reg.get_nearest_neighbour_final_node_locations()\n'
-                      'or try re-running with the flags: \n'
-                      'return_average_final_points=True & return_transformed_mesh=True')
+                raise Exception('No corresponding points or meshes calculated. Try running: \n'
+                                'reg.get_weighted_final_node_locations()\n'
+                                'reg.get_nearest_neighbour_final_node_locations()\n'
+                                'or try re-running with the flags: \n'
+                                'return_average_final_points=True & return_transformed_mesh=True')
         if include_average is True:
             if self.average_mesh is None:
                 if self.weighted_avg_transformed_points is not None:
@@ -616,8 +616,8 @@ class Focusr(object):
                 elif self.nearest_neighbor_transformed_points is not None:
                     self.get_average_shape(align_type='nearest')
                 else:
-                    raise("No xyz correspondences calculated can't get average! Try:\n"
-                          "`reg.get_weighted_final_node_locations` or `reg.get_nearest_neighbour_final_node_locations`")
+                    raise Exception("No xyz correspondences calculated can't get average! Try:\n"
+                                    "`reg.get_weighted_final_node_locations` or `reg.get_nearest_neighbour_final_node_locations`")
             geometries.append(self.average_mesh)
 
         plotter = Viewer(geometries=geometries, shadow=shadow)

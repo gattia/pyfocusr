@@ -206,7 +206,7 @@ class Graph(object):
                 fiedler_idx = eig_idx
                 break
         else:
-            raise('No Fiedler!')
+            raise Exception('No Fiedler!')
 
         if fiedler_idx > 1:
             self.eig_vals, self.eig_vecs = eigs(self.laplacian_matrix,
