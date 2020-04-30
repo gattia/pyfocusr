@@ -354,7 +354,7 @@ def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
     if fiedler_idx > (k - n_k_needed):  # If the fiedler_idx too high to allow extraction of enough eigs restart.
         print('Fiedler found, not enough eig_vals - Restarting')
         recursive_eig(matrix,
-                      k=fiedler_idx+n_k_needed+k_buffer, # add buffer just in case some instability
+                      k=fiedler_idx+n_k_needed+k_buffer,  # add buffer just in case some instability
                       n_k_needed=n_k_needed,
                       k_buffer=k_buffer,
                       sigma=sigma,
@@ -362,6 +362,7 @@ def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
     eig_vals = np.real(eig_vals)
     eig_vecs = np.real(eig_vecs)
     print('All final eigenvalues are: \n{}'.format(eig_vals))
+    return
     print('-'*72)
     print('Final eigenvalues of interest are: \n{}'.format(eig_vals[fiedler_idx:fiedler_idx+n_k_needed]))
-    return eig_vals, eig_vecs, fiedler_idx
+    # return eig_vals, eig_vecs, fiedler_idx
