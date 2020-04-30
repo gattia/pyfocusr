@@ -283,8 +283,10 @@ class Focusr(object):
         # Next, we take each of these smoothed points (particularly arranged based on which ones best align with
         # the spectral coordinates of the target mesh) and we smooth these vertices/values using the adjacency/degree
         # matrix of the source mesh. I.e. the target mesh coordinates are smoothed on the surface of the source mesh.
-        if self.smoothed_target_coords.shape[0] > self.graph_source.n_points:
-            source_points_to_register
+        if ((self.smoothed_target_coords.shape[0] != self.graph_source.n_points)
+                & (self.initial_correspondence_type is 'hungarian')):
+            raise Exception("If number vertices between source & target don't match, initial_correspondence_type must\n"
+                            "be 'kd' and not 'hungarian'. Current type is: {}".format(self.initial_correspondence_type))
         self.source_projected_on_target = self.graph_source.mean_filter_graph(self.smoothed_target_coords[self.corresponding_target_idx_for_each_source_pt, :],
                                                                               iterations=self.projection_smooth_iterations)
 
