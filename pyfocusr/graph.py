@@ -201,29 +201,12 @@ class Graph(object):
                                                         k=self.n_spectral_features + 1,
                                                         n_k_needed=self.n_spectral_features,
                                                         k_buffer=1)
-
-        # self.eig_vals, self.eig_vecs = eigs(self.laplacian_matrix,
-        #                                     k=self.n_spectral_features + 1,
-        #                                     sigma=1e-10,
-        #                                     which='LM')
-        # print('Eigen values are: \n{}'.format(np.real(self.eig_vals)))
-        # for eig_idx, eig_val in enumerate(self.eig_vals):
-        #     if eig_val > 1e-10:
-        #         fiedler_idx = eig_idx
-        #         break
-        # else:
-        #     raise Exception('No Fiedler!')
-        #
-        # if fiedler_idx > 1:
-        #     self.eig_vals, self.eig_vecs = eigs(self.laplacian_matrix,
-        #                                         k=self.n_spectral_features + fiedler_idx + 1,
-        #                                         sigma=1e-8,
-        #                                         which='LM')
-        #
-        #     print('Not enough eigenvalues!\nSecond set of eigen values are: \n{}'.format(np.real(self.eig_vals)))
-
         self.eig_vals = eig_vals[fiedler_idx:fiedler_idx + self.n_spectral_features]
         self.eig_vecs = eig_vecs[:, fiedler_idx:fiedler_idx + self.n_spectral_features]
+
+        print('All final eigenvalues are: \n{}'.format(eig_vals))
+        print('-' * 72)
+        print('Final eigenvalues of interest are: \n{}'.format(self.eig_vals))
 
         if self.norm_eig_vecs is True:
             self.eig_vecs = (self.eig_vecs - np.min(self.eig_vecs, axis=0)) / np.ptp(self.eig_vecs, axis=0) - 0.5
@@ -361,7 +344,4 @@ def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
                                                         which=which)
     eig_vals = np.real(eig_vals)
     eig_vecs = np.real(eig_vecs)
-    print('All final eigenvalues are: \n{}'.format(eig_vals))
-    print('-'*72)
-    print('Final eigenvalues of interest are: \n{}'.format(eig_vals[fiedler_idx:fiedler_idx+n_k_needed]))
     return eig_vals, eig_vecs, fiedler_idx
