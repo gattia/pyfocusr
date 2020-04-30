@@ -18,6 +18,7 @@ class Focusr(object):
                  vtk_mesh_source,
                  icp_register_first=True,               # bool, should register meshes together first
                  icp_registration_mode='rigid',         # str - should icp reg be rigid or similarity (rigid + scale)
+                 icp_reg_target_to_source=False,        # bool of what should be registered to what in ICP.
                  n_spectral_features=3,                 #
                  n_extra_spectral=3,                    #
                  norm_physical_and_spectral=True,       #
@@ -48,9 +49,11 @@ class Focusr(object):
                  G_matrix_p_function='exp',             # Param for feature processing before laplacian creation
                  norm_node_features_std=True,           # Param for feature processing before laplacian creation
                  norm_node_features_cap_std=3,          # Param for feature processing before laplacian creation
-                 norm_node_features_0_1=True            # Param for feature processing before laplacian creation
+                 norm_node_features_0_1=True,           # Param for feature processing before laplacian creation
+                 verbose=False                          # bool - setting whether should print extraneous details
                  ):
-
+        self.verbose = verbose
+        print('Starting Focusr')
         # Inputs
         #   Spectral coordinates based inputs/parameters
         self.n_spectral_features = n_spectral_features
@@ -84,16 +87,24 @@ class Focusr(object):
         self.final_correspondence_type = final_correspondence_type  # 'kd' or 'hungarian' correspondence
         self.return_transformed_mesh = return_transformed_mesh  # bool to tell if we should create new mesh.
 
+        print('Starting ICP')
         # Prepare Meshes / Graphs
         #   Rigidly register target to source before beginning.
         #   This ensures they are in same space for all steps.
         if icp_register_first is True:
-            if icp_registration_mode == 'rigid':
-                icp = icp_transform(target=vtk_mesh_target, source=vtk_mesh_source, transform_mode='rigid')
-            elif icp_registration_mode == 'similarity':
-                icp = icp_transform(target=vtk_mesh_target, source=vtk_mesh_source, transform_mode='similarity')
-            vtk_mesh_source = apply_transform(source=vtk_mesh_source, transform=icp)
-
+            if icp_reg_target_to_source is True:
+                if icp_registration_mode == 'rigid':
+                    icp = icp_transform(target=vtk_mesh_source, source=vtk_mesh_target, transform_mode='rigid')
+                elif icp_registration_mode == 'similarity':
+                    icp = icp_transform(target=vtk_mesh_source, source=vtk_mesh_target, transform_mode='similarity')
+                vtk_mesh_target = apply_transform(source=vtk_mesh_target, transform=icp)
+            elif icp_reg_target_to_source is False:
+                if icp_registration_mode == 'rigid':
+                    icp = icp_transform(target=vtk_mesh_target, source=vtk_mesh_source, transform_mode='rigid')
+                elif icp_registration_mode == 'similarity':
+                    icp = icp_transform(target=vtk_mesh_target, source=vtk_mesh_source, transform_mode='similarity')
+                vtk_mesh_source = apply_transform(source=vtk_mesh_source, transform=icp)
+        print('Starting to build first graph')
         # Build target graph
         self.graph_target = Graph(vtk_mesh_target,
                                   n_spectral_features=self.n_total_spectral_features,
