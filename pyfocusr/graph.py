@@ -336,13 +336,14 @@ def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
     :param which:
     :return:
     """
+    fiedler_idx = None
     print('Starting!')
     eig_vals, eig_vecs = eigs(matrix, k=k, sigma=sigma, which=which)
     for eig_idx, eig_val in enumerate(eig_vals):
         if eig_val > 1e-10:
             fiedler_idx = eig_idx
             break
-    else:  # If we go through all of eig_vals and never assign fiedler (and break) then restart with more ks
+    if fiedler_idx is None:
         print('Fiedler not found! - Restarting')
         recursive_eig(matrix,
                       k=k+n_k_needed + k_buffer,
@@ -350,8 +351,7 @@ def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
                       k_buffer=k_buffer,
                       sigma=sigma,
                       which=which)
-    print('Finished for else')
-    if fiedler_idx > (k - n_k_needed):  # If the fiedler_idx too high to allow extraction of enough eigs restart.
+    elif fiedler_idx > (k - n_k_needed):  # If the fiedler_idx too high to allow extraction of enough eigs restart.
         print('Fiedler found, not enough eig_vals - Restarting')
         recursive_eig(matrix,
                       k=fiedler_idx+n_k_needed+k_buffer,  # add buffer just in case some instability
@@ -359,11 +359,9 @@ def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
                       k_buffer=k_buffer,
                       sigma=sigma,
                       which=which)
-    else:
-        eig_vals = np.real(eig_vals)
-        eig_vecs = np.real(eig_vecs)
-        print('All final eigenvalues are: \n{}'.format(eig_vals))
-        return
-        print('-'*72)
-        print('Final eigenvalues of interest are: \n{}'.format(eig_vals[fiedler_idx:fiedler_idx+n_k_needed]))
-        # return eig_vals, eig_vecs, fiedler_idx
+    eig_vals = np.real(eig_vals)
+    eig_vecs = np.real(eig_vecs)
+    print('All final eigenvalues are: \n{}'.format(eig_vals))
+    print('-'*72)
+    print('Final eigenvalues of interest are: \n{}'.format(eig_vals[fiedler_idx:fiedler_idx+n_k_needed]))
+    return eig_vals, eig_vecs, fiedler_idx
