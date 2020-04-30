@@ -182,6 +182,48 @@ class Graph(object):
         laplacian = self.degree_matrix - self.adjacency_matrix
         self.laplacian_matrix = self.G @ laplacian
 
+    def recursive_eig(self, matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
+        """
+        Recursive function to iteratively get eigs until have enough to get fiedler + n_k_needed @ minimum.
+        If one final
+        :param matrix:
+        :param k:
+        :param n_k_needed:
+        :param k_buffer:
+        :param sigma:
+        :param which:
+        :return:
+        """
+        eig_vals, eig_vecs = eigs(matrix, k=k, sigma=sigma, which=which)
+        for eig_idx, eig_val in enumerate(eig_vals):
+            if eig_val > 1e-10:
+                fiedler_idx = eig_idx
+                break
+        else:  # If we go through all of eig_vals and never assign fiedler (and break) then restart with more ks
+            print('Fiedler not found! - Restarting')
+            recursive_eig(matrix,
+                          k=k+n_k_needed + k_buffer,
+                          n_k_needed=n_k_needed,
+                          k_buffer=k_buffer,
+                          sigma=sigma,
+                          which=which)
+        if fiedler_idx > (k - n_k_needed):  # If the fiedler_idx too high to allow extraction of enough eigs restart.
+            print('Fiedler found, not enough eig_vals - Restarting')
+            recursive_eig(matrix,
+                          k=fiedler_idx+n_k_needed+k_buffer, # add buffer just in case some instability
+                          n_k_needed=n_k_needed,
+                          k_buffer=k_buffer,
+                          sigma=sigma,
+                          which=which)
+        eig_vals = np.real(eig_vals)
+        eig_vecs = np.real(eig_vecs)
+        print('All final eigenvalues are: \n{}'.format(eig_vals))
+        print('-'*72)
+        print('Final eigenvalues of interest ar: \n{}'.format(eig_vals[fiedler_idx:fiedler_idx+n_k_needed]))
+        return eig_vals, eig_vecs, fiedler_idx
+
+
+
     def get_graph_spectrum(self):
         self.get_weighted_adjacency_matrix()
         self.get_degree_matrix()
@@ -196,28 +238,34 @@ class Graph(object):
         # Therefore, use sparse matrices for all circumstances.
         # laplacian_sparse = sparse.csc_matrix(self.laplacian_matrix)
         print('Beginning Eigen Decomposition')
-        self.eig_vals, self.eig_vecs = eigs(self.laplacian_matrix,
-                                            k=self.n_spectral_features + 1,
-                                            sigma=1e-10,
-                                            which='LM')
-        print('Eigen values are: \n{}'.format(np.real(self.eig_vals)))
-        for eig_idx, eig_val in enumerate(self.eig_vals):
-            if eig_val > 1e-10:
-                fiedler_idx = eig_idx
-                break
-        else:
-            raise Exception('No Fiedler!')
 
-        if fiedler_idx > 1:
-            self.eig_vals, self.eig_vecs = eigs(self.laplacian_matrix,
-                                                k=self.n_spectral_features + fiedler_idx + 1,
-                                                sigma=1e-8,
-                                                which='LM')
+        eig_vals, eig_vecs, fiedler_idx = recursive_eig(self.laplacian_matrix,
+                                                        k=self.n_spectral_features + 1,
+                                                        n_k_needed=self.n_spectral_features,
+                                                        k_buffer=1)
 
-            print('Not enough eigenvalues!\nSecond set of eigen values are: \n{}'.format(np.real(self.eig_vals)))
+        # self.eig_vals, self.eig_vecs = eigs(self.laplacian_matrix,
+        #                                     k=self.n_spectral_features + 1,
+        #                                     sigma=1e-10,
+        #                                     which='LM')
+        # print('Eigen values are: \n{}'.format(np.real(self.eig_vals)))
+        # for eig_idx, eig_val in enumerate(self.eig_vals):
+        #     if eig_val > 1e-10:
+        #         fiedler_idx = eig_idx
+        #         break
+        # else:
+        #     raise Exception('No Fiedler!')
+        #
+        # if fiedler_idx > 1:
+        #     self.eig_vals, self.eig_vecs = eigs(self.laplacian_matrix,
+        #                                         k=self.n_spectral_features + fiedler_idx + 1,
+        #                                         sigma=1e-8,
+        #                                         which='LM')
+        #
+        #     print('Not enough eigenvalues!\nSecond set of eigen values are: \n{}'.format(np.real(self.eig_vals)))
 
-        self.eig_vals = np.real(self.eig_vals[fiedler_idx:fiedler_idx + self.n_spectral_features])
-        self.eig_vecs = np.real(self.eig_vecs[:, fiedler_idx:fiedler_idx + self.n_spectral_features])
+        self.eig_vals = eig_vals[fiedler_idx:fiedler_idx + self.n_spectral_features]
+        self.eig_vecs = eig_vecs[:, fiedler_idx:fiedler_idx + self.n_spectral_features]
 
         if self.norm_eig_vecs is True:
             self.eig_vecs = (self.eig_vecs - np.min(self.eig_vecs, axis=0)) / np.ptp(self.eig_vecs, axis=0) - 0.5
