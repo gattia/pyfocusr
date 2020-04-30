@@ -336,6 +336,7 @@ def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
     :param which:
     :return:
     """
+    print('Starting!')
     eig_vals, eig_vecs = eigs(matrix, k=k, sigma=sigma, which=which)
     for eig_idx, eig_val in enumerate(eig_vals):
         if eig_val > 1e-10:
@@ -361,5 +362,5 @@ def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
     eig_vecs = np.real(eig_vecs)
     print('All final eigenvalues are: \n{}'.format(eig_vals))
     print('-'*72)
-    print('Final eigenvalues of interest ar: \n{}'.format(eig_vals[fiedler_idx:fiedler_idx+n_k_needed]))
+    print('Final eigenvalues of interest are: \n{}'.format(eig_vals[fiedler_idx:fiedler_idx+n_k_needed]))
     return eig_vals, eig_vecs, fiedler_idx
