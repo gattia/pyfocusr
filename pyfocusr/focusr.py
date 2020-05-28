@@ -45,6 +45,8 @@ class Focusr(object):
                  initial_correspondence_type='kd',      # 'kd' or 'hungarian'
                  final_correspondence_type='kd',        #
                  list_features_to_calc=['curvature'],   # include as input of graph_source & graph_target
+                 use_features_as_coords=False,          #
+                 use_features_in_graph=False,           #
                  include_features_in_adj_matrix=False,  # include as input of graph_source & graph_target
                  G_matrix_p_function='exp',             # Param for feature processing before laplacian creation
                  norm_node_features_std=True,           # Param for feature processing before laplacian creation
@@ -111,6 +113,7 @@ class Focusr(object):
                                   n_rand_samples=n_coords_spectral_ordering,
                                   list_features_to_calc=list_features_to_calc,
                                   feature_weights=feature_weights,
+                                  include_features_in_G_matrix=use_features_in_graph,
                                   include_features_in_adj_matrix=include_features_in_adj_matrix,
                                   G_matrix_p_function=G_matrix_p_function,
                                   norm_node_features_std=norm_node_features_std,
@@ -127,11 +130,12 @@ class Focusr(object):
                                   n_rand_samples=n_coords_spectral_ordering,
                                   list_features_to_calc=list_features_to_calc,
                                   feature_weights=feature_weights,
+                                  include_features_in_G_matrix=use_features_in_graph,
                                   include_features_in_adj_matrix=include_features_in_adj_matrix,
                                   G_matrix_p_function=G_matrix_p_function,
                                   norm_node_features_std=norm_node_features_std,
                                   norm_node_features_cap_std=norm_node_features_cap_std,
-                                  norm_node_features_0_1=norm_node_features_0_1
+                                  norm_node_features_0_1=norm_node_features_0_1,
                                   )
         print('Loaded Mesh 2')
         # Build source spectrum
@@ -148,6 +152,7 @@ class Focusr(object):
         # Extra features (curvature etc.)
         self.source_extra_features = None  # Extra features used for mapping
         self.target_extra_features = None
+        self.use_features_as_coords = use_features_as_coords
 
         # Saved versions of spectral coords during registration/processing for post-analysis/viewing
         self.source_spectral_coords_after_rigid = None
@@ -190,8 +195,20 @@ class Focusr(object):
         for feature_idx in range(self.graph_source.n_extra_features):
             self.source_extra_features[:, feature_idx] = self.graph_source.mean_filter_graph(
                 self.graph_source.node_features[feature_idx], iterations=self.feature_smoothing_iterations)
+            self.source_extra_features[:, feature_idx] = self.source_extra_features[:, feature_idx] \
+                                                         - np.min(self.source_extra_features[:, feature_idx])
+            self.source_extra_features[:, feature_idx] = self.source_extra_features[:, feature_idx] \
+                                                         / np.max(self.source_extra_features[:, feature_idx])
+            self.source_extra_features[:, feature_idx] = np.ptp(self.source_spectral_coords) * self.source_extra_features[:, feature_idx]
+
             self.target_extra_features[:, feature_idx] = self.graph_target.mean_filter_graph(
                 self.graph_target.node_features[feature_idx], iterations=self.feature_smoothing_iterations)
+            self.target_extra_features[:, feature_idx] = self.target_extra_features[:, feature_idx] \
+                                                         - np.min(self.target_extra_features[:, feature_idx])
+            self.target_extra_features[:, feature_idx] = self.target_extra_features[:, feature_idx] \
+                                                         / np.max(self.target_extra_features[:, feature_idx])
+            self.target_extra_features[:, feature_idx] = np.ptp(
+                self.target_spectral_coords) * self.target_extra_features[:, feature_idx]
 
         self.source_spectral_coords = np.concatenate((self.source_spectral_coords,
                                                       self.source_extra_features), axis=1)
@@ -405,7 +422,7 @@ class Focusr(object):
         self.Q = eig_map_sorter.sort_eigenmaps()
         self.calc_spectral_coords()
 
-        if self.graph_source.n_extra_features > 0:
+        if (self.graph_source.n_extra_features > 0) & (self.use_features_as_coords is True):
             self.append_features_to_spectral_coords()
 
         if self.include_points_as_features is True:

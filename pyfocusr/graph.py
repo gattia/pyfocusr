@@ -19,6 +19,7 @@ class Graph(object):
                  list_features_to_calc=[],
                  feature_weights=None,
                  include_features_in_adj_matrix=False,
+                 include_features_in_G_matrix=False,
                  G_matrix_p_function='exp',
                  norm_node_features_std=True,
                  norm_node_features_cap_std=3,
@@ -35,6 +36,7 @@ class Graph(object):
         else:
             self.feature_weights = feature_weights
         self.include_features_in_adj_matrix = include_features_in_adj_matrix  # Bool about including features in ajd.
+        self.include_features_in_G_matrix = include_features_in_G_matrix  # Bool about include features in G.
         self.G_matrix_p_function = G_matrix_p_function
         #How to normmalize extra features.
         self.norm_node_features_std = norm_node_features_std
@@ -146,7 +148,7 @@ class Graph(object):
         :param p_function:
         :return:
         """
-        if self.n_extra_features > 0:
+        if (self.n_extra_features > 0) & (self.include_features_in_G_matrix is True):
             self.G = np.zeros(self.n_points)
             for k in range(self.n_extra_features):
                 # Add up the normalized node _
@@ -165,9 +167,10 @@ class Graph(object):
                 self.G += G * G_scaling  # Add scaled feature values to to G matrix.
             self.G = self.G / self.n_extra_features  # Get average self.G across features.
             self.G = sparse.diags(self.G)
-            self.G = self.G.multiply(self.degree_matrix_inv.diagonal())
+            # self.G = self.G.multiply(self.degree_matrix_inv.diagonal())
+            self.G = self.degree_matrix_inv @ self.G
 
-        elif self.n_extra_features == 0:
+        else:
             self.G = self.degree_matrix_inv
 
     def get_degree_matrix(self):
