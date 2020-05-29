@@ -167,8 +167,8 @@ class Graph(object):
                 self.G += G * G_scaling  # Add scaled feature values to to G matrix.
             self.G = self.G / self.n_extra_features  # Get average self.G across features.
             self.G = sparse.diags(self.G)
-            # self.G = self.G.multiply(self.degree_matrix_inv.diagonal())
-            self.G = self.degree_matrix_inv @ self.G
+            self.G = self.G.multiply(self.degree_matrix_inv.diagonal())
+            # self.G = self.degree_matrix_inv @ self.G
 
         else:
             self.G = self.degree_matrix_inv
