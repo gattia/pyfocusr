@@ -324,7 +324,7 @@ def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
     """
     fiedler_idx = None
     print('Starting!')
-    eig_vals, eig_vecs = eigs(matrix, k=k, sigma=sigma, which=which)
+    eig_vals, eig_vecs = eigs(matrix, k=k, sigma=sigma, which=which, ncv=4*k)
     for eig_idx, eig_val in enumerate(eig_vals):
         if eig_val > 1e-10:
             fiedler_idx = eig_idx
