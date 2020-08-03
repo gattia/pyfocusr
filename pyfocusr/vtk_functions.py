@@ -9,11 +9,16 @@ def read_vtk_mesh(path_to_file):
     return reader.GetOutput()
 
 
-def icp_transform(target, source, numberOfIterations=100, number_landmarks=1000):
+def icp_transform(target, source, numberOfIterations=100, number_landmarks=1000, transform_mode='rigid'):
     icp = vtk.vtkIterativeClosestPointTransform()
+    if transform_mode == 'rigid':
+        icp.GetLandmarkTransform().SetModeToRigidBody()
+    elif transform_mode == 'similarity':
+        icp.GetLandmarkTransform().SetModeToSimilarity()
+    else:
+        raise('Error invalid transform mode')
     icp.SetTarget(target)
     icp.SetSource(source)
-    icp.GetLandmarkTransform().SetModeToRigidBody()
     icp.SetMaximumNumberOfIterations(numberOfIterations)
     icp.StartByMatchingCentroidsOn()
     icp.Modified()

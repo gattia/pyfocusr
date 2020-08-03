@@ -16,6 +16,9 @@ class Focusr(object):
     def __init__(self,
                  vtk_mesh_target,
                  vtk_mesh_source,
+                 icp_register_first=True,               # bool, should register meshes together first
+                 icp_registration_mode='rigid',         # str - should icp reg be rigid or similarity (rigid + scale)
+                 icp_reg_target_to_source=False,        # bool of what should be registered to what in ICP.
                  n_spectral_features=3,                 #
                  n_extra_spectral=3,                    #
                  norm_physical_and_spectral=True,       #
@@ -42,13 +45,17 @@ class Focusr(object):
                  initial_correspondence_type='kd',      # 'kd' or 'hungarian'
                  final_correspondence_type='kd',        #
                  list_features_to_calc=['curvature'],   # include as input of graph_source & graph_target
+                 use_features_as_coords=False,          #
+                 use_features_in_graph=False,           #
                  include_features_in_adj_matrix=False,  # include as input of graph_source & graph_target
                  G_matrix_p_function='exp',             # Param for feature processing before laplacian creation
                  norm_node_features_std=True,           # Param for feature processing before laplacian creation
                  norm_node_features_cap_std=3,          # Param for feature processing before laplacian creation
-                 norm_node_features_0_1=True            # Param for feature processing before laplacian creation
+                 norm_node_features_0_1=True,           # Param for feature processing before laplacian creation
+                 verbose=False                          # bool - setting whether should print extraneous details
                  ):
-
+        self.verbose = verbose
+        print('Starting Focusr')
         # Inputs
         #   Spectral coordinates based inputs/parameters
         self.n_spectral_features = n_spectral_features
@@ -82,18 +89,31 @@ class Focusr(object):
         self.final_correspondence_type = final_correspondence_type  # 'kd' or 'hungarian' correspondence
         self.return_transformed_mesh = return_transformed_mesh  # bool to tell if we should create new mesh.
 
+        print('Starting ICP')
         # Prepare Meshes / Graphs
         #   Rigidly register target to source before beginning.
         #   This ensures they are in same space for all steps.
-        icp = icp_transform(target=vtk_mesh_target, source=vtk_mesh_source)
-        vtk_mesh_source = apply_transform(source=vtk_mesh_source, transform=icp)
-
+        if icp_register_first is True:
+            if icp_reg_target_to_source is True:
+                if icp_registration_mode == 'rigid':
+                    icp = icp_transform(target=vtk_mesh_source, source=vtk_mesh_target, transform_mode='rigid')
+                elif icp_registration_mode == 'similarity':
+                    icp = icp_transform(target=vtk_mesh_source, source=vtk_mesh_target, transform_mode='similarity')
+                vtk_mesh_target = apply_transform(source=vtk_mesh_target, transform=icp)
+            elif icp_reg_target_to_source is False:
+                if icp_registration_mode == 'rigid':
+                    icp = icp_transform(target=vtk_mesh_target, source=vtk_mesh_source, transform_mode='rigid')
+                elif icp_registration_mode == 'similarity':
+                    icp = icp_transform(target=vtk_mesh_target, source=vtk_mesh_source, transform_mode='similarity')
+                vtk_mesh_source = apply_transform(source=vtk_mesh_source, transform=icp)
+        print('Starting to build first graph')
         # Build target graph
         self.graph_target = Graph(vtk_mesh_target,
                                   n_spectral_features=self.n_total_spectral_features,
                                   n_rand_samples=n_coords_spectral_ordering,
                                   list_features_to_calc=list_features_to_calc,
                                   feature_weights=feature_weights,
+                                  include_features_in_G_matrix=use_features_in_graph,
                                   include_features_in_adj_matrix=include_features_in_adj_matrix,
                                   G_matrix_p_function=G_matrix_p_function,
                                   norm_node_features_std=norm_node_features_std,
@@ -110,11 +130,12 @@ class Focusr(object):
                                   n_rand_samples=n_coords_spectral_ordering,
                                   list_features_to_calc=list_features_to_calc,
                                   feature_weights=feature_weights,
+                                  include_features_in_G_matrix=use_features_in_graph,
                                   include_features_in_adj_matrix=include_features_in_adj_matrix,
                                   G_matrix_p_function=G_matrix_p_function,
                                   norm_node_features_std=norm_node_features_std,
                                   norm_node_features_cap_std=norm_node_features_cap_std,
-                                  norm_node_features_0_1=norm_node_features_0_1
+                                  norm_node_features_0_1=norm_node_features_0_1,
                                   )
         print('Loaded Mesh 2')
         # Build source spectrum
@@ -131,6 +152,7 @@ class Focusr(object):
         # Extra features (curvature etc.)
         self.source_extra_features = None  # Extra features used for mapping
         self.target_extra_features = None
+        self.use_features_as_coords = use_features_as_coords
 
         # Saved versions of spectral coords during registration/processing for post-analysis/viewing
         self.source_spectral_coords_after_rigid = None
@@ -163,9 +185,9 @@ class Focusr(object):
     def append_features_to_spectral_coords(self):
         print('Appending Extra Features to Spectral Coords')
         if self.graph_source.n_extra_features != self.graph_target.n_extra_features:
-            raise ('Number of extra features between'
-                   ' target ({}) and source ({}) dont match!'.format(self.graph_target.n_extra_features,
-                                                                     self.graph_source.n_extra_features))
+            raise Exception('Number of extra features between'
+                            ' target ({}) and source ({}) dont match!'.format(self.graph_target.n_extra_features,
+                                                                              self.graph_source.n_extra_features))
 
         self.source_extra_features = np.zeros((self.graph_source.n_points, self.graph_source.n_extra_features))
         self.target_extra_features = np.zeros((self.graph_target.n_points, self.graph_target.n_extra_features))
@@ -173,8 +195,20 @@ class Focusr(object):
         for feature_idx in range(self.graph_source.n_extra_features):
             self.source_extra_features[:, feature_idx] = self.graph_source.mean_filter_graph(
                 self.graph_source.node_features[feature_idx], iterations=self.feature_smoothing_iterations)
+            self.source_extra_features[:, feature_idx] = self.source_extra_features[:, feature_idx] \
+                                                         - np.min(self.source_extra_features[:, feature_idx])
+            self.source_extra_features[:, feature_idx] = self.source_extra_features[:, feature_idx] \
+                                                         / np.max(self.source_extra_features[:, feature_idx])
+            self.source_extra_features[:, feature_idx] = np.ptp(self.source_spectral_coords) * self.source_extra_features[:, feature_idx]
+
             self.target_extra_features[:, feature_idx] = self.graph_target.mean_filter_graph(
                 self.graph_target.node_features[feature_idx], iterations=self.feature_smoothing_iterations)
+            self.target_extra_features[:, feature_idx] = self.target_extra_features[:, feature_idx] \
+                                                         - np.min(self.target_extra_features[:, feature_idx])
+            self.target_extra_features[:, feature_idx] = self.target_extra_features[:, feature_idx] \
+                                                         / np.max(self.target_extra_features[:, feature_idx])
+            self.target_extra_features[:, feature_idx] = np.ptp(
+                self.target_spectral_coords) * self.target_extra_features[:, feature_idx]
 
         self.source_spectral_coords = np.concatenate((self.source_spectral_coords,
                                                       self.source_extra_features), axis=1)
@@ -253,9 +287,9 @@ class Focusr(object):
         The correspondences indicate where (on the target mesh) each source point should move to.
         :return:
         """
-        if self.initial_correspondence_type is 'kd':
+        if self.initial_correspondence_type == 'kd':
             self.get_kd_correspondence(self.target_spectral_coords, self.source_spectral_coords)
-        elif self.initial_correspondence_type is 'hungarian':
+        elif self.initial_correspondence_type == 'hungarian':
             self.get_hungarian_correspondence(self.target_spectral_coords, self.source_spectral_coords)
 
     def get_smoothed_correspondences(self):
@@ -266,12 +300,16 @@ class Focusr(object):
         # Next, we take each of these smoothed points (particularly arranged based on which ones best align with
         # the spectral coordinates of the target mesh) and we smooth these vertices/values using the adjacency/degree
         # matrix of the source mesh. I.e. the target mesh coordinates are smoothed on the surface of the source mesh.
+        if ((self.smoothed_target_coords.shape[0] != self.graph_source.n_points)
+                & (self.initial_correspondence_type == 'hungarian')):
+            raise Exception("If number vertices between source & target don't match, initial_correspondence_type must\n"
+                            "be 'kd' and not 'hungarian'. Current type is: {}".format(self.initial_correspondence_type))
         self.source_projected_on_target = self.graph_source.mean_filter_graph(self.smoothed_target_coords[self.corresponding_target_idx_for_each_source_pt, :],
                                                                               iterations=self.projection_smooth_iterations)
 
-        if self.final_correspondence_type is 'kd':
+        if self.final_correspondence_type == 'kd':
             self.get_kd_correspondence(self.smoothed_target_coords, self.source_projected_on_target)
-        elif self.final_correspondence_type is 'hungarian':
+        elif self.final_correspondence_type == 'hungarian':
             self.get_hungarian_correspondence(self.smoothed_target_coords, self.source_projected_on_target)
 
         # This now matches/makes correspondences. Can use this correspondence.
@@ -289,9 +327,15 @@ class Focusr(object):
         for pt_idx in range(self.graph_source.n_points):
             closest_pt_distances, closest_pt_idxs = tree.query(self.source_projected_on_target[pt_idx, :],
                                                                k=n_closest_pts)
-            weighting = 1 / closest_pt_distances[:, None]
-            avg_location = np.sum(self.graph_target.points[closest_pt_idxs, :] * weighting, axis=0) / (sum(weighting))
-            self.weighted_avg_transformed_points[pt_idx, :] = avg_location
+
+            if 0 in closest_pt_distances:
+                idx_coincident = np.where(closest_pt_distances == 0)[0][0]
+                self.weighted_avg_transformed_points[pt_idx, :] = self.graph_target.points[closest_pt_idxs[idx_coincident]]
+            else:
+                weighting = 1 / closest_pt_distances[:, None]
+
+                avg_location = np.sum(self.graph_target.points[closest_pt_idxs, :] * weighting, axis=0) / (sum(weighting))
+                self.weighted_avg_transformed_points[pt_idx, :] = avg_location
 
     def get_nearest_neighbour_final_node_locations(self):
         self.nearest_neighbor_transformed_points = self.graph_target.points[self.corresponding_target_idx_for_each_source_pt, :]
@@ -378,7 +422,7 @@ class Focusr(object):
         self.Q = eig_map_sorter.sort_eigenmaps()
         self.calc_spectral_coords()
 
-        if self.graph_source.n_extra_features > 0:
+        if (self.graph_source.n_extra_features > 0) & (self.use_features_as_coords is True):
             self.append_features_to_spectral_coords()
 
         if self.include_points_as_features is True:
@@ -579,11 +623,11 @@ class Focusr(object):
                 self.get_source_mesh_transformed_nearest_neighbour()
                 geometries.append(self.nearest_neighbour_transformed_mesh)
             else:
-                raise('No corresponding points or meshes calculated. Try running: \n'
-                      'reg.get_weighted_final_node_locations()\n'
-                      'reg.get_nearest_neighbour_final_node_locations()\n'
-                      'or try re-running with the flags: \n'
-                      'return_average_final_points=True & return_transformed_mesh=True')
+                raise Exception('No corresponding points or meshes calculated. Try running: \n'
+                                'reg.get_weighted_final_node_locations()\n'
+                                'reg.get_nearest_neighbour_final_node_locations()\n'
+                                'or try re-running with the flags: \n'
+                                'return_average_final_points=True & return_transformed_mesh=True')
         if include_average is True:
             if self.average_mesh is None:
                 if self.weighted_avg_transformed_points is not None:
@@ -591,8 +635,8 @@ class Focusr(object):
                 elif self.nearest_neighbor_transformed_points is not None:
                     self.get_average_shape(align_type='nearest')
                 else:
-                    raise("No xyz correspondences calculated can't get average! Try:\n"
-                          "`reg.get_weighted_final_node_locations` or `reg.get_nearest_neighbour_final_node_locations`")
+                    raise Exception("No xyz correspondences calculated can't get average! Try:\n"
+                                    "`reg.get_weighted_final_node_locations` or `reg.get_nearest_neighbour_final_node_locations`")
             geometries.append(self.average_mesh)
 
         plotter = Viewer(geometries=geometries, shadow=shadow)

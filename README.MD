@@ -20,10 +20,24 @@ This package will find correspondence between points on two surfaces using spect
 
 
 # Installation
+It is recommended that installtion is performed in a new environment. 
 ```
+conda create --name focusr python=3.7
+```
+First install cycpd which is required, but not available on pip or conda (yet). 
+```
+git clone https://github.com/gattia/cycpd
+cd cycpd
+conda install -c conda-forge --file requirements.txt
+sudo python setup.py install
+```
+Next, pull and install pyfocusr
+```
+cd ..
 git clone https://github.com/gattia/pyfocusr
 cd pyfocusr
-python setup.py install
+conda install -c conda-forge --file requirements.txt
+sudo python setup.py install
 ```
 
 # Examples
