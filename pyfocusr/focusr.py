@@ -45,6 +45,7 @@ class Focusr(object):
                  initial_correspondence_type='kd',      # 'kd' or 'hungarian'
                  final_correspondence_type='kd',        #
                  list_features_to_calc=['curvature'],   # include as input of graph_source & graph_target
+                 list_features_to_get_from_mesh=[],     # 'thickness (mm)' - get info from mesh surface for reg
                  use_features_as_coords=False,          #
                  use_features_in_graph=False,           #
                  include_features_in_adj_matrix=False,  # include as input of graph_source & graph_target
@@ -112,6 +113,7 @@ class Focusr(object):
                                   n_spectral_features=self.n_total_spectral_features,
                                   n_rand_samples=n_coords_spectral_ordering,
                                   list_features_to_calc=list_features_to_calc,
+                                  list_features_to_get_from_mesh=list_features_to_get_from_mesh,
                                   feature_weights=feature_weights,
                                   include_features_in_G_matrix=use_features_in_graph,
                                   include_features_in_adj_matrix=include_features_in_adj_matrix,
@@ -129,6 +131,7 @@ class Focusr(object):
                                   n_spectral_features=self.n_total_spectral_features,
                                   n_rand_samples=n_coords_spectral_ordering,
                                   list_features_to_calc=list_features_to_calc,
+                                  list_features_to_get_from_mesh=list_features_to_get_from_mesh,
                                   feature_weights=feature_weights,
                                   include_features_in_G_matrix=use_features_in_graph,
                                   include_features_in_adj_matrix=include_features_in_adj_matrix,

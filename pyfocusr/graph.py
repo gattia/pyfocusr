@@ -17,6 +17,7 @@ class Graph(object):
                  norm_eig_vecs=True,
                  n_rand_samples=10000,
                  list_features_to_calc=[],
+                 list_features_to_get_from_mesh=[],
                  feature_weights=None,
                  include_features_in_adj_matrix=False,
                  include_features_in_G_matrix=False,
@@ -72,6 +73,20 @@ class Graph(object):
         self.node_features = []
         for feature in list_features_to_calc:
             self.node_features += list(features_dictionary[feature](self.vtk_mesh))
+        for feature in list_features_to_get_from_mesh:
+            n = vtk_mesh.GetPointData().GetNumberOfArrays()
+            for idx in range(n):
+                if vtk_mesh.GetPointData().GetArray(idx).GetName() == feature:
+                    break
+                elif idx == n - 1:
+                    print('NO SCALARS WITH SPECIFIED NAME')
+                    idx = np.nan
+                    break
+                else:
+                    pass
+
+            self.node_features += list(vtk_to_numpy(vtk_mesh.GetPointData().GetArray(idx)))
+
         # normalize the node features w/ options for how it is normalized.
         self.norm_node_features(norm_using_std=self.norm_node_features_std,
                                 norm_range_0_to_1=self.norm_node_features_0_1,
