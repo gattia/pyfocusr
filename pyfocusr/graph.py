@@ -85,7 +85,7 @@ class Graph(object):
                 else:
                     pass
 
-            self.node_features += list(vtk_to_numpy(vtk_mesh.GetPointData().GetArray(idx)))
+            self.node_features += list([vtk_to_numpy(vtk_mesh.GetPointData().GetArray(idx)),])
 
         # normalize the node features w/ options for how it is normalized.
         self.norm_node_features(norm_using_std=self.norm_node_features_std,
