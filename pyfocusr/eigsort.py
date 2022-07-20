@@ -108,14 +108,22 @@ class eigsort(object):
         elif self.target_as_reference is False:
             self.graph_target.eig_vecs[:, source_matches] = self.graph_target.eig_vecs[:, target_matches]
         print_header('Eigenvector Sorting Results')
+        if self.target_as_reference is True:
+            print('Using target eigenmaps as the reference')
+        elif self.target_as_reference is False:
+            print('Using source eigenmaps as the reference')
         print('The matches for eigenvectors were as follows:')
         print('Target\t|  Source')
         for matched_pair in zip(target_matches, source_matches):
+            source_value = str(matched_pair[1])
+            target_value = str(matched_pair[0])
             if matched_pair in flipped_pairs:
-                source_value = '-' + str(matched_pair[1])
-            else:
-                source_value = str(matched_pair[1])
-            print('{:6}\t|  {:6}'.format(matched_pair[0], source_value))
+                if self.target_as_reference is True:
+                    source_value = '-' + source_value
+                elif self.target_as_reference is False:
+                    target_value = '-' + target_value
+
+            print('{:6}\t|  {:6}'.format(target_value, source_value))
         print('*Negative source values means those eigenvectors were flipped*\n ')
 
     def calc_c_lambda(self):
