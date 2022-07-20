@@ -215,14 +215,12 @@ class Graph(object):
         # laplacian_sparse = sparse.csc_matrix(self.laplacian_matrix)
         print('Beginning Eigen Decomposition')
 
-        eig_vals, eig_vecs, fiedler_idx = recursive_eig(self.laplacian_matrix,
-                                                        k=self.n_spectral_features + 1,
-                                                        n_k_needed=self.n_spectral_features,
-                                                        k_buffer=1)
-        self.eig_vals = eig_vals[fiedler_idx:fiedler_idx + self.n_spectral_features]
-        self.eig_vecs = eig_vecs[:, fiedler_idx:fiedler_idx + self.n_spectral_features]
+        self.eig_vals, self.eig_vecs = recursive_eig(self.laplacian_matrix,
+                                           k=self.n_spectral_features + 1,
+                                           n_k_needed=self.n_spectral_features,
+                                           k_buffer=1)
 
-        print('All final eigenvalues are: \n{}'.format(eig_vals))
+        print('All final eigenvalues are: \n{}'.format(self.eig_vals))
         print('-' * 72)
         print('Final eigenvalues of interest are: \n{}'.format(self.eig_vals))
 
@@ -337,34 +335,25 @@ def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
     :param which:
     :return:
     """
-    fiedler_idx = None
+    MIN_EIG_VAL = 1e-10
+
     print('Starting!')
     eig_vals, eig_vecs = eigs(matrix, k=k, sigma=sigma, which=which, ncv=4*k)
-    for eig_idx, eig_val in enumerate(eig_vals):
-        if eig_val > 1e-10:
-            fiedler_idx = eig_idx
-            n_good_after_fiedler = sum(eig_vals[fiedler_idx:] > 1e-10)
-            break
     
-    if fiedler_idx is None:
-        print('Fiedler not found! - Restarting')
-        eig_vals, eig_vecs, fiedler_idx = recursive_eig(matrix,
-                                                       k=k+n_k_needed + k_buffer,
-                                                       n_k_needed=n_k_needed,
-                                                       k_buffer=k_buffer,
-                                                       sigma=sigma,
-                                                       which=which)
-    elif (fiedler_idx > (k - n_k_needed)) or (n_good_after_fiedler < n_k_needed):  
-        # If the fiedler_idx too high to allow extraction of enough eigs restart.
-        # Also if not enough eig_vals > threshold, restart.
-        print('Fiedler found, not enough eig_vals - Restarting')
-        eig_vals, eig_vecs, fiedler_idx = recursive_eig(matrix,
-                                                        k=fiedler_idx+n_k_needed+k_buffer,  # add buffer incase instability
-                                                        n_k_needed=n_k_needed,
-                                                        k_buffer=k_buffer,
-                                                        sigma=sigma,
-                                                        which=which)
+    n_good_eigen_vals = sum(eig_vals > MIN_EIG_VAL)
+
+    if n_good_eigen_vals < n_k_needed:
+        print('Not enough eigenvalues found, trying again with more eigenvalues!')
+        k += k_buffer + n_k_needed
+        eig_vals, eig_vecs = recursive_eig(matrix, k, n_k_needed, k_buffer, sigma, which)
+
+    
+    eig_keep = np.where(eig_vals > MIN_EIG_VAL)[0]
+
+    eig_vals = eig_vals[eig_keep]
+    eig_vecs = eig_vecs[:, eig_keep]
 
     eig_vals = np.real(eig_vals)
     eig_vecs = np.real(eig_vecs)
-    return eig_vals, eig_vecs, fiedler_idx
+
+    return eig_vals, eig_vecs
