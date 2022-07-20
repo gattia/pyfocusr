@@ -13,7 +13,10 @@ class eigsort(object):
     def __init__(self,
                  graph_target,
                  graph_source,
-                 n_features
+                 n_features,
+                 target_as_reference=True, # if `True``, then target order used as reference and source permuted
+                                           # to match target. If `False`, then source order used as reference and
+                                           # target is permuted. 
                  ):
 
         # Input variables
@@ -21,6 +24,7 @@ class eigsort(object):
         self.graph_target = graph_target  # Target mesh (match source eigs to this)
         self.graph_source = graph_source  # Source mesh (eigs to re-order/flip to match target).
         self.n_features = n_features  # number of features (eigenvecs/values) to consider during alignment.
+        self.target_as_reference = target_as_reference  # If true, then the target mesh is used as the reference
 
         # Build/create specified data needed for alignment.
 
@@ -63,7 +67,10 @@ class eigsort(object):
         (target_flipped, source_flipped) = np.where(S == True)
 
         # Get matches
-        target_matches, source_matches = linear_sum_assignment(self.Q)
+        if self.target_as_reference is True:
+            target_matches, source_matches = linear_sum_assignment(self.Q)
+        elif self.target_as_reference is False:
+            source_matches, target_matches = linear_sum_assignment(self.Q.T)
         # The original Matlab code calculates Q as:
         # Q = sum(M'*Q')'; which is equivalent to np.sum(np.matmul(M.T, Q.T), axis=0)
         # Where M = nXn matrix where n is number of spectral features (or the length of target_matches). and
@@ -90,11 +97,16 @@ class eigsort(object):
         # Flipped pairs are used to flip the sign of the source eig_vecs.
 
         for mode_0, mode_1 in flipped_pairs:
-            self.graph_source.eig_vecs[:, mode_1] = self.graph_source.eig_vecs[:, mode_1] * -1
+            if self.target_as_reference is True:
+                self.graph_source.eig_vecs[:, mode_1] = self.graph_source.eig_vecs[:, mode_1] * -1
+            elif self.target_as_reference is False:
+                self.graph_target.eig_vecs[:, mode_0] = self.graph_target.eig_vecs[:, mode_0] * -1
         # The source eig_vecs are re-ordered to match the order from the target eig_vecs - based on the best matches
         # Identified using Hungarian algorithm (linear_sum_assignment) on the dissimilarity matrix Q.
-        self.graph_source.eig_vecs[:, target_matches] = self.graph_source.eig_vecs[:, source_matches]
-
+        if self.target_as_reference is True:
+            self.graph_source.eig_vecs[:, target_matches] = self.graph_source.eig_vecs[:, source_matches]
+        elif self.target_as_reference is False:
+            self.graph_target.eig_vecs[:, source_matches] = self.graph_target.eig_vecs[:, target_matches]
         print_header('Eigenvector Sorting Results')
         print('The matches for eigenvectors were as follows:')
         print('Target\t|  Source')

@@ -21,6 +21,10 @@ class Focusr(object):
                  icp_reg_target_to_source=False,        # bool of what should be registered to what in ICP.
                  n_spectral_features=3,                 #
                  n_extra_spectral=3,                    #
+                 target_eigenmap_as_reference=True,     # bool, should use target eigenmap as reference for spectral reg
+                                                        # This is helpful for registering a "template" mesh (which is the source)
+                                                        # to another mesh (which is the target), commonly performed in
+                                                        # statistical shape models (SSM).
                  norm_physical_and_spectral=True,       #
                  n_coords_spectral_ordering=5000,       #
                  n_coords_spectral_registration=5000,   #
@@ -62,6 +66,7 @@ class Focusr(object):
         self.n_spectral_features = n_spectral_features
         self.n_extra_spectral = n_extra_spectral
         self.n_total_spectral_features = self.n_spectral_features + self.n_extra_spectral
+        self.target_eigenmap_as_reference = target_eigenmap_as_reference
 
         #   Normalization & what included in registration
         self.norm_physical_and_spectral = norm_physical_and_spectral  # Bool, norm spect&xyz. Otherwise, spect to xyz.
@@ -421,7 +426,8 @@ class Focusr(object):
     def align_maps(self):
         eig_map_sorter = eigsort(graph_target=self.graph_target,
                                  graph_source=self.graph_source,
-                                 n_features=self.n_total_spectral_features)
+                                 n_features=self.n_total_spectral_features,
+                                 target_as_reference=self.target_eigenmap_as_reference)
         self.Q = eig_map_sorter.sort_eigenmaps()
         self.calc_spectral_coords()
 
