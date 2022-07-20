@@ -343,7 +343,9 @@ def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
     for eig_idx, eig_val in enumerate(eig_vals):
         if eig_val > 1e-10:
             fiedler_idx = eig_idx
+            n_good_after_fiedler = sum(eig_vals[fiedler_idx:] > 1e-10)
             break
+    
     if fiedler_idx is None:
         print('Fiedler not found! - Restarting')
         eig_vals, eig_vecs, fiedler_idx = recursive_eig(matrix,
@@ -352,7 +354,9 @@ def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
                                                        k_buffer=k_buffer,
                                                        sigma=sigma,
                                                        which=which)
-    elif fiedler_idx > (k - n_k_needed):  # If the fiedler_idx too high to allow extraction of enough eigs restart.
+    elif (fiedler_idx > (k - n_k_needed)) or (n_good_after_fiedler < n_k_needed):  
+        # If the fiedler_idx too high to allow extraction of enough eigs restart.
+        # Also if not enough eig_vals > threshold, restart.
         print('Fiedler found, not enough eig_vals - Restarting')
         eig_vals, eig_vecs, fiedler_idx = recursive_eig(matrix,
                                                         k=fiedler_idx+n_k_needed+k_buffer,  # add buffer incase instability
@@ -360,6 +364,7 @@ def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
                                                         k_buffer=k_buffer,
                                                         sigma=sigma,
                                                         which=which)
+
     eig_vals = np.real(eig_vals)
     eig_vecs = np.real(eig_vecs)
     return eig_vals, eig_vecs, fiedler_idx
