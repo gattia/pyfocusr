@@ -1,4 +1,3 @@
-scikit-build
 matplotlib
 vtk
 itkwidgets

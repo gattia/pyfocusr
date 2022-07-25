@@ -1,6 +1,7 @@
 .PHONY: build install 
 
 requirements:
+	python -m pip install scikit-build
 	python -m pip install -r requirements.txt
 
 # alternatively
