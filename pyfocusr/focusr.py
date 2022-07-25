@@ -29,8 +29,8 @@ class Focusr(object):
         # to another mesh (which is the target), commonly performed in
         # statistical shape models (SSM).
         norm_physical_and_spectral=True,  # Bool, norm spect&xyz. Otherwise, spect to xyz.
-        n_coords_spectral_ordering=5000, 
-        n_coords_spectral_registration=5000, # max n points for registration
+        n_coords_spectral_ordering=5000,
+        n_coords_spectral_registration=5000,  # max n points for registration
         rigid_before_non_rigid_reg=True,
         rigid_reg_max_iterations=100,
         rigid_tolerance=1e-8,
@@ -39,22 +39,22 @@ class Focusr(object):
         non_rigid_alpha=0.5,
         non_rigid_beta=3.0,
         non_rigid_n_eigens=100,
-        include_points_as_features=False, # include xyz coords in registration
-        get_weighted_spectral_coords=True, 
-        graph_smoothing_iterations=300,  
-        feature_smoothing_iterations=40, # number smooth iterations to extra features
+        include_points_as_features=False,  # include xyz coords in registration
+        get_weighted_spectral_coords=True,
+        graph_smoothing_iterations=300,
+        feature_smoothing_iterations=40,  # number smooth iterations to extra features
         smooth_correspondences=True,  # Bool - smooth values to improve diffeomorphism?
         return_average_final_points=True,  # make weighted avg final xyz position?
         return_nearest_final_points=True,  # make nearest neighbour final xyz position?
         return_transformed_mesh=True,  # bool to tell if we should create new mesh.
-        projection_smooth_iterations=40, # n iterations projection smoothing
-        feature_weights=None,  
+        projection_smooth_iterations=40,  # n iterations projection smoothing
+        feature_weights=None,
         initial_correspondence_type="kd",  # 'kd' or 'hungarian'
         final_correspondence_type="kd",  # 'kd' or 'hungarian'
         list_features_to_calc=["curvature"],  # include as input of graph_source & graph_target
         list_features_to_get_from_mesh=[],  # 'thickness (mm)' - get info from mesh surface for reg
-        use_features_as_coords=False,   
-        use_features_in_graph=False,  
+        use_features_as_coords=False,
+        use_features_in_graph=False,
         include_features_in_adj_matrix=False,  # include as input of graph_source & graph_target
         G_matrix_p_function="exp",  # Param for feature processing before laplacian creation
         norm_node_features_std=True,  # Param for feature processing before laplacian creation
@@ -72,12 +72,12 @@ class Focusr(object):
         self.target_eigenmap_as_reference = target_eigenmap_as_reference
 
         #   Normalization & what included in registration
-        self.norm_physical_and_spectral = norm_physical_and_spectral 
-        self.include_points_as_features = include_points_as_features  
+        self.norm_physical_and_spectral = norm_physical_and_spectral
+        self.include_points_as_features = include_points_as_features
         self.get_weighted_spectral_coords = get_weighted_spectral_coords
-        self.feature_smoothing_iterations = feature_smoothing_iterations  
+        self.feature_smoothing_iterations = feature_smoothing_iterations
         #   Registration parameters (general)
-        self.n_coords_spectral_registration = n_coords_spectral_registration  
+        self.n_coords_spectral_registration = n_coords_spectral_registration
         #       Rigid reg params
         self.rigid_before_non_rigid_reg = rigid_before_non_rigid_reg
         self.rigid_reg_max_iterations = rigid_reg_max_iterations
@@ -90,13 +90,13 @@ class Focusr(object):
         self.non_rigid_n_eigens = non_rigid_n_eigens
         #   Correspondence selection parameters
         self.initial_correspondence_type = initial_correspondence_type
-        self.smooth_correspondences = smooth_correspondences  
-        self.return_average_final_points = return_average_final_points 
-        self.return_nearest_final_points = return_nearest_final_points  
+        self.smooth_correspondences = smooth_correspondences
+        self.return_average_final_points = return_average_final_points
+        self.return_nearest_final_points = return_nearest_final_points
         self.graph_smoothing_iterations = graph_smoothing_iterations
-        self.projection_smooth_iterations =  projection_smooth_iterations 
-        self.final_correspondence_type =  final_correspondence_type 
-        self.return_transformed_mesh = return_transformed_mesh 
+        self.projection_smooth_iterations = projection_smooth_iterations
+        self.final_correspondence_type = final_correspondence_type
+        self.return_transformed_mesh = return_transformed_mesh
 
         print("Starting ICP")
         # Prepare Meshes / Graphs
@@ -186,19 +186,19 @@ class Focusr(object):
 
         # Results / Correspondences:
         # smoothed coordinates of target - used for final correspondences.
-        self.smoothed_target_coords = None  
-         # source values projected on target graph for finding final correspond
+        self.smoothed_target_coords = None
+        # source values projected on target graph for finding final correspond
         self.source_projected_on_target = None
         # source mesh transformed to target w/ weighted avg.
-        self.weighted_avg_transformed_mesh = None  
+        self.weighted_avg_transformed_mesh = None
         # source mesh transformed to target w/ nearest neighbour
-        self.nearest_neighbour_transformed_mesh = None  
+        self.nearest_neighbour_transformed_mesh = None
         # Final correspondence (target ID for each source pt)
-        self.corresponding_target_idx_for_each_source_pt = None  
-         # location source points move on target as nearest neighbor.
-        self.nearest_neighbor_transformed_points = None 
+        self.corresponding_target_idx_for_each_source_pt = None
+        # location source points move on target as nearest neighbor.
+        self.nearest_neighbor_transformed_points = None
         # location source points move on the target mesh as weighted avg.
-        self.weighted_avg_transformed_points = None  
+        self.weighted_avg_transformed_points = None
         self.average_mesh = None  # average of the two meshes (based on the correspondences).
         # self.nearest_neighbour_transformed_mesh = None
         # self.weighted_avg_transformed_mesh = None

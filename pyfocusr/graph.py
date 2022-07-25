@@ -35,16 +35,20 @@ class Graph(object):
 
         # Inputs
         self.vtk_mesh = vtk_mesh  # store mesh
-        self.n_spectral_features = n_spectral_features # number of spectral features to extract.
-        self.norm_eig_vecs = norm_eig_vecs # Bool - to normalize eigvecs or not.
-    
+        self.n_spectral_features = n_spectral_features  # number of spectral features to extract.
+        self.norm_eig_vecs = norm_eig_vecs  # Bool - to normalize eigvecs or not.
+
         self.feature_weights = feature_weights  # Prep feature weights
         if feature_weights is None:
             self.feature_weights = np.eye(self.n_extra_features)
         else:
             self.feature_weights = feature_weights
-        self.include_features_in_adj_matrix = include_features_in_adj_matrix # Bool, features in adj?
-        self.include_features_in_G_matrix = include_features_in_G_matrix  # Bool, include features in G
+        self.include_features_in_adj_matrix = (
+            include_features_in_adj_matrix  # Bool, features in adj?
+        )
+        self.include_features_in_G_matrix = (
+            include_features_in_G_matrix  # Bool, include features in G
+        )
         self.G_matrix_p_function = G_matrix_p_function
         # How to normmalize extra features.
         self.norm_node_features_std = norm_node_features_std
