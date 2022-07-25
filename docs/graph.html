@@ -1,0 +1,1220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pyfocusr.graph API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pyfocusr.graph</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import numpy as np
+from scipy.sparse.linalg import eigs
+from scipy import sparse
+# import vtk
+from vtk.util.numpy_support import numpy_to_vtk
+from .vtk_functions import *
+from itkwidgets import Viewer
+features_dictionary = {&#39;curvature&#39;: get_min_max_curvature_values,
+                       &#39;min_curvature&#39;: get_min_curvature,
+                       &#39;max_curvature&#39;: get_max_curvature}
+
+
+class Graph(object):
+    def __init__(self,
+                 vtk_mesh,
+                 n_spectral_features=3,
+                 norm_eig_vecs=True,
+                 n_rand_samples=10000,
+                 list_features_to_calc=[],
+                 list_features_to_get_from_mesh=[],
+                 feature_weights=None,
+                 include_features_in_adj_matrix=False,
+                 include_features_in_G_matrix=False,
+                 G_matrix_p_function=&#39;exp&#39;,
+                 norm_node_features_std=True,
+                 norm_node_features_cap_std=3,
+                 norm_node_features_0_1=True,
+                 ):
+
+        # Inputs
+        self.vtk_mesh = vtk_mesh  # store mesh
+        self.n_spectral_features = n_spectral_features  # number of spectral features to extract.
+        self.norm_eig_vecs = norm_eig_vecs  # Bool - to normalize eigvecs or not. Option, but maybe shouldn&#39;t be.
+        self.feature_weights = feature_weights  # Prep feature weights (either set to be input, or create
+        if feature_weights is None:
+            self.feature_weights = np.eye(self.n_extra_features)
+        else:
+            self.feature_weights = feature_weights
+        self.include_features_in_adj_matrix = include_features_in_adj_matrix  # Bool about including features in ajd.
+        self.include_features_in_G_matrix = include_features_in_G_matrix  # Bool about include features in G.
+        self.G_matrix_p_function = G_matrix_p_function
+        #How to normmalize extra features.
+        self.norm_node_features_std = norm_node_features_std
+        self.norm_node_features_cap_std = norm_node_features_cap_std
+        self.norm_node_features_0_1 = norm_node_features_0_1
+
+        # Mesh/points characteristics
+        self.n_points = vtk_mesh.GetNumberOfPoints()  # store number points in mesh.
+        # Iterate over the points saving their 3d location.
+        self.points = np.zeros((self.n_points, 3))
+        for point_idx in range(self.n_points):
+            self.points[point_idx, :] = self.vtk_mesh.GetPoint(point_idx)
+        self.pts_scale_range = np.ptp(self.points, axis=0)  # range points in each axis
+        self.max_pts_scale_range = np.max(self.pts_scale_range)  # max range points
+        self.mean_pts_scale_range = np.mean(self.pts_scale_range)  # mean range points (per axis)
+        # create normalized version of point coordinates.
+        self.normed_points = (self.points - np.min(self.points, axis=0)) / self.mean_pts_scale_range
+
+        # Assign matrices that will be used for laplacian and eigen decomposition.
+        self.adjacency_matrix = sparse.lil_matrix((vtk_mesh.GetNumberOfPoints(), vtk_mesh.GetNumberOfPoints()))
+        self.degree_matrix = None
+        self.degree_matrix_inv = None
+        self.laplacian_matrix = None
+        self.G = None
+
+        # Eigen values that will be calculated &amp; their characteristics.
+        self.eig_vals = None
+        self.eig_vecs = None
+        self.eig_val_gap = None
+        self.rand_idxs = self.get_list_rand_idxs(n_rand_samples)
+
+        # Calculate node features &amp; store in self.node_features for use.
+        self.node_features = []
+        for feature in list_features_to_calc:
+            self.node_features += list(features_dictionary[feature](self.vtk_mesh))
+        for feature in list_features_to_get_from_mesh:
+            n = vtk_mesh.GetPointData().GetNumberOfArrays()
+            for idx in range(n):
+                if vtk_mesh.GetPointData().GetArray(idx).GetName() == feature:
+                    break
+                elif idx == n - 1:
+                    print(&#39;NO SCALARS WITH SPECIFIED NAME&#39;)
+                    idx = np.nan
+                    break
+                else:
+                    pass
+
+            self.node_features += list([vtk_to_numpy(vtk_mesh.GetPointData().GetArray(idx)),])
+
+        # normalize the node features w/ options for how it is normalized.
+        self.norm_node_features(norm_using_std=self.norm_node_features_std,
+                                norm_range_0_to_1=self.norm_node_features_0_1,
+                                cap_std=self.norm_node_features_cap_std)
+        self.n_extra_features = len(self.node_features)  # number of extra features used.
+        # Get version of extra features that are scaled up to the
+        self.mean_xyz_range_scaled_features = []
+        if self.n_extra_features &gt; 0:
+            for ftr_idx in range(len(self.node_features)):
+                self.mean_xyz_range_scaled_features.append(self.node_features[ftr_idx] * self.mean_pts_scale_range)
+
+    def norm_node_features(self, norm_using_std=True, norm_range_0_to_1=True, cap_std=3):
+        &#34;&#34;&#34;
+        Need multiple methods of normalizing the node_features.
+
+        :param cap_std:
+        :param norm_range_0_to_1:
+        :param norm_using_std:
+        :return:
+        &#34;&#34;&#34;
+        for idx in range(len(self.node_features)):
+            if norm_using_std is True:
+                self.node_features[idx] = (self.node_features[idx] - np.mean(self.node_features[idx])) \
+                                          / np.std(self.node_features[idx])
+                if cap_std is not False:
+                    self.node_features[idx][self.node_features[idx] &gt; cap_std] = cap_std
+                    self.node_features[idx][self.node_features[idx] &lt; -cap_std] = -cap_std
+
+            if norm_range_0_to_1 is True:
+                self.node_features[idx] = (self.node_features[idx] - np.min(self.node_features[idx]))\
+                                          / np.ptp(self.node_features[idx])
+
+    &#34;&#34;&#34;
+    Functions to create matrices needed for laplacian and eigen decomposition. 
+    &#34;&#34;&#34;
+
+    def get_weighted_adjacency_matrix(self):
+        &#39;&#39;&#39;
+        Get/fill the adjacency matrix for the mesh vtk_mesh
+        - Add options to enable adding the features
+        :return:
+        &#39;&#39;&#39;
+
+        n_cells = self.vtk_mesh.GetNumberOfCells()
+        for cell_idx in range(n_cells):
+            cell = self.vtk_mesh.GetCell(cell_idx)
+            for edge_idx in range(cell.GetNumberOfEdges()):
+                edge = cell.GetEdge(edge_idx)
+                point_1 = int(edge.GetPointId(0))
+                point_2 = int(edge.GetPointId(1))
+
+                X_pt1 = np.asarray(self.vtk_mesh.GetPoint(point_1))
+                X_pt2 = np.asarray(self.vtk_mesh.GetPoint(point_2))
+
+                if (self.n_extra_features &gt; 0) &amp; (self.include_features_in_adj_matrix is True):
+                    for ftr_idx in range(self.n_extra_features):
+                        # Append the &#34;features&#34; to the x/y/z position. Use features that have been scaled to be in
+                        # the range of the max range axis of xyz.
+                        X_pt1 = np.concatenate((X_pt1, self.mean_xyz_range_scaled_features[ftr_idx][point_1, None]))
+                        X_pt2 = np.concatenate((X_pt2, self.mean_xyz_range_scaled_features[ftr_idx][point_2, None]))
+
+                distance = np.sqrt(np.sum(np.square(X_pt1 -
+                                                    X_pt2)))
+                self.adjacency_matrix[point_1, point_2] = 1. / distance
+
+    def get_G_matrix(self, p_function=&#39;exp&#39;):
+        &#34;&#34;&#34;
+        Get G matrix for creating laplacian laplacian = G * (D-W)
+        p_function options include:
+            - exp
+            - log
+            - square
+            -otherwise just make sure it is 0 or higher.
+        :param p_function:
+        :return:
+        &#34;&#34;&#34;
+        if (self.n_extra_features &gt; 0) &amp; (self.include_features_in_G_matrix is True):
+            self.G = np.zeros(self.n_points)
+            for k in range(self.n_extra_features):
+                # Add up the normalized node _
+                if p_function == &#39;exp&#39;:
+                    G = np.exp(self.node_features[k])
+                elif p_function == &#39;log&#39;:
+                    # use log function. Ensure that all values are above zero (make it 1 and up).
+                    G = np.log(self.node_features[k] - np.min(self.node_features[k]) + 1)
+                elif p_function == &#39;square&#39;:
+                    G = self.node_features[k]**2
+                else:
+                    # Otherwise, just ensure features are 0 and higher.
+                    G = self.node_features[k] - np.min(self.node_features[k])
+                # Scale features to be in range of degree_matrix. Then, multople by the feature weighting.
+                G_scaling = self.feature_weights[k, k] * np.ptp(self.degree_matrix) / np.ptp(G)
+                self.G += G * G_scaling  # Add scaled feature values to to G matrix.
+            self.G = self.G / self.n_extra_features  # Get average self.G across features.
+            self.G = sparse.diags(self.G)
+            self.G = self.G.multiply(self.degree_matrix_inv.diagonal())
+            # self.G = self.degree_matrix_inv @ self.G
+
+        else:
+            self.G = self.degree_matrix_inv
+
+    def get_degree_matrix(self):
+        self.degree_matrix = np.asarray(self.adjacency_matrix.sum(axis=1))
+        self.degree_matrix = sparse.diags(self.degree_matrix[:, 0])
+        self.degree_matrix_inv = sparse.diags((self.degree_matrix.diagonal() + 1e-8)**-1)
+
+    def get_laplacian_matrix(self):
+        # Ensure that G is defined.
+        if self.G is None:
+            self.G = self.degree_matrix_inv
+        laplacian = self.degree_matrix - self.adjacency_matrix
+        self.laplacian_matrix = self.G @ laplacian
+
+    def get_graph_spectrum(self):
+        self.get_weighted_adjacency_matrix()
+        self.get_degree_matrix()
+        self.get_G_matrix(p_function=self.G_matrix_p_function)
+        self.get_laplacian_matrix()
+
+        # sparse.csc_matrix was faster than sparse.csr_matrix on tests of 5k square matrix.
+        # (359+/- 6.7 ms vs 379 +/- 20.2 ms  including 10 iterations per run and 7 runs).
+        # providing sigma (a value to find eigenvalues near to) slows things down considerably.
+        # providing `ncv` doesnt change things too much (maybe slower if anything).
+        # The sparse versions are even faster than using eigh on a dense matrix.
+        # Therefore, use sparse matrices for all circumstances.
+        # laplacian_sparse = sparse.csc_matrix(self.laplacian_matrix)
+        print(&#39;Beginning Eigen Decomposition&#39;)
+
+        self.eig_vals, self.eig_vecs = recursive_eig(self.laplacian_matrix,
+                                           k=self.n_spectral_features + 1,
+                                           n_k_needed=self.n_spectral_features,
+                                           k_buffer=1)
+
+        print(&#39;All final eigenvalues are: \n{}&#39;.format(self.eig_vals))
+        print(&#39;-&#39; * 72)
+        print(&#39;Final eigenvalues of interest are: \n{}&#39;.format(self.eig_vals))
+
+        if self.norm_eig_vecs is True:
+            self.eig_vecs = (self.eig_vecs - np.min(self.eig_vecs, axis=0)) / np.ptp(self.eig_vecs, axis=0) - 0.5
+
+    &#34;&#34;&#34;
+    Get sub samples/measurements from/of eigenvectors or characteristics about them. 
+    &#34;&#34;&#34;
+
+    def get_eig_val_gap(self):
+        self.eig_val_gap = np.mean(np.diff(self.eig_vals))
+
+    def get_rand_eig_vecs(self):
+        return self.eig_vecs[self.rand_idxs, :]
+
+    def get_rand_normalized_points(self):
+        return (self.points[self.rand_idxs, :] - np.min(self.points[self.rand_idxs, :], axis=0)) \
+               / np.ptp(self.points[self.rand_idxs, :], axis=0)
+
+    def get_list_rand_idxs(self, n_rand_samples, replace=False, force_randomization=False):
+        &#34;&#34;&#34;
+        Return idxs of random samples
+        - By default do not use replacement (each sample should only be able to be taken one)
+        - If n_rand_samples is more than the number of points, should just return idxs to all points.
+        :param force_randomization:
+        :param n_rand_samples:
+        :param replace:
+        :return:
+        &#34;&#34;&#34;
+        if n_rand_samples &gt; self.n_points:
+            list_points = np.arange(self.n_points)
+            if force_randomization is True:
+                np.shuffle(list_points)
+            return list_points
+
+        return np.random.choice(self.n_points, size=n_rand_samples, replace=replace)
+
+    &#34;&#34;&#34;
+    View meshes/points/results. 
+    &#34;&#34;&#34;
+
+    def view_mesh_existing_scalars(self):
+        plotter = Viewer(geometries=[self.vtk_mesh]
+                         )
+        return plotter
+
+    def view_mesh_eig_vec(self, eig_vec=0):
+        tmp_mesh = vtk_deep_copy(self.vtk_mesh)
+        tmp_mesh.GetPointData().SetScalars(numpy_to_vtk(np.ascontiguousarray(self.eig_vecs[:, eig_vec])))
+        plotter = Viewer(geometries=[tmp_mesh]
+                         )
+        return plotter
+
+    def view_mesh_features(self, feature_idx=0):
+        tmp_mesh = vtk_deep_copy(self.vtk_mesh)
+        tmp_mesh.GetPointData().SetScalars(numpy_to_vtk(np.ascontiguousarray((self.node_features[feature_idx]))))
+        plotter = Viewer(geometries=[tmp_mesh]
+                         )
+        return plotter
+
+    &#34;&#34;&#34;
+    Filter graph f(x)s 
+    &#34;&#34;&#34;
+
+    def mean_filter_graph(self, values, iterations=300):
+        &#34;&#34;&#34;
+        See below for copyright of this particular function:
+        However, note that some changes have been made as the original was in Matlab, and included more options etc.
+
+        Copyright (C) 2002, 2003 Leo Grady &lt;lgrady@cns.bu.edu&gt;
+        Computer Vision and Computational Neuroscience Lab
+        Department of Cognitive and Neural Systems
+        Boston University
+        Boston, MA  02215
+
+        This program is free software; you can redistribute it and/or
+        modify it under the terms of the GNU General Public License
+        as published by the Free Software Foundation; either version 2
+        of the License, or (at your option) any later version.
+
+        This program is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU General Public License for more details.
+
+        You should have received a copy of the GNU General Public License
+        along with this program; if not, write to the Free Software
+        Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+        :param values:
+        :param iterations:
+        :return:
+        &#34;&#34;&#34;
+        D_inv = sparse.diags(1. / (1 + np.asarray(self.adjacency_matrix.sum(axis=1))[:, 0]))
+        out_values = values
+        average_mat = D_inv @ (self.adjacency_matrix + sparse.eye(self.adjacency_matrix.shape[0]))
+        for iteration in range(iterations):
+            out_values = average_mat @ out_values
+        return out_values
+
+
+def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which=&#39;LM&#39;):
+    &#34;&#34;&#34;
+    Recursive function to iteratively get eigs until have enough to get fiedler + n_k_needed @ minimum.
+    If one final
+    :param matrix:
+    :param k:
+    :param n_k_needed:
+    :param k_buffer:
+    :param sigma:
+    :param which:
+    :return:
+    &#34;&#34;&#34;
+    MIN_EIG_VAL = 1e-10
+
+    print(&#39;Starting!&#39;)
+    eig_vals, eig_vecs = eigs(matrix, k=k, sigma=sigma, which=which, ncv=4*k)
+    
+    n_good_eigen_vals = sum(eig_vals &gt; MIN_EIG_VAL)
+
+    if n_good_eigen_vals &lt; n_k_needed:
+        print(&#39;Not enough eigenvalues found, trying again with more eigenvalues!&#39;)
+        k += k_buffer + n_k_needed
+        eig_vals, eig_vecs = recursive_eig(matrix, k, n_k_needed, k_buffer, sigma, which)
+
+    
+    eig_keep = np.where(eig_vals &gt; MIN_EIG_VAL)[0]
+
+    eig_vals = eig_vals[eig_keep]
+    eig_vecs = eig_vecs[:, eig_keep]
+
+    eig_vals = np.real(eig_vals)
+    eig_vecs = np.real(eig_vecs)
+
+    return eig_vals, eig_vecs</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pyfocusr.graph.recursive_eig"><code class="name flex">
+<span>def <span class="ident">recursive_eig</span></span>(<span>matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Recursive function to iteratively get eigs until have enough to get fiedler + n_k_needed @ minimum.
+If one final
+:param matrix:
+:param k:
+:param n_k_needed:
+:param k_buffer:
+:param sigma:
+:param which:
+:return:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which=&#39;LM&#39;):
+    &#34;&#34;&#34;
+    Recursive function to iteratively get eigs until have enough to get fiedler + n_k_needed @ minimum.
+    If one final
+    :param matrix:
+    :param k:
+    :param n_k_needed:
+    :param k_buffer:
+    :param sigma:
+    :param which:
+    :return:
+    &#34;&#34;&#34;
+    MIN_EIG_VAL = 1e-10
+
+    print(&#39;Starting!&#39;)
+    eig_vals, eig_vecs = eigs(matrix, k=k, sigma=sigma, which=which, ncv=4*k)
+    
+    n_good_eigen_vals = sum(eig_vals &gt; MIN_EIG_VAL)
+
+    if n_good_eigen_vals &lt; n_k_needed:
+        print(&#39;Not enough eigenvalues found, trying again with more eigenvalues!&#39;)
+        k += k_buffer + n_k_needed
+        eig_vals, eig_vecs = recursive_eig(matrix, k, n_k_needed, k_buffer, sigma, which)
+
+    
+    eig_keep = np.where(eig_vals &gt; MIN_EIG_VAL)[0]
+
+    eig_vals = eig_vals[eig_keep]
+    eig_vecs = eig_vecs[:, eig_keep]
+
+    eig_vals = np.real(eig_vals)
+    eig_vecs = np.real(eig_vecs)
+
+    return eig_vals, eig_vecs</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pyfocusr.graph.Graph"><code class="flex name class">
+<span>class <span class="ident">Graph</span></span>
+<span>(</span><span>vtk_mesh, n_spectral_features=3, norm_eig_vecs=True, n_rand_samples=10000, list_features_to_calc=[], list_features_to_get_from_mesh=[], feature_weights=None, include_features_in_adj_matrix=False, include_features_in_G_matrix=False, G_matrix_p_function='exp', norm_node_features_std=True, norm_node_features_cap_std=3, norm_node_features_0_1=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Graph(object):
+    def __init__(self,
+                 vtk_mesh,
+                 n_spectral_features=3,
+                 norm_eig_vecs=True,
+                 n_rand_samples=10000,
+                 list_features_to_calc=[],
+                 list_features_to_get_from_mesh=[],
+                 feature_weights=None,
+                 include_features_in_adj_matrix=False,
+                 include_features_in_G_matrix=False,
+                 G_matrix_p_function=&#39;exp&#39;,
+                 norm_node_features_std=True,
+                 norm_node_features_cap_std=3,
+                 norm_node_features_0_1=True,
+                 ):
+
+        # Inputs
+        self.vtk_mesh = vtk_mesh  # store mesh
+        self.n_spectral_features = n_spectral_features  # number of spectral features to extract.
+        self.norm_eig_vecs = norm_eig_vecs  # Bool - to normalize eigvecs or not. Option, but maybe shouldn&#39;t be.
+        self.feature_weights = feature_weights  # Prep feature weights (either set to be input, or create
+        if feature_weights is None:
+            self.feature_weights = np.eye(self.n_extra_features)
+        else:
+            self.feature_weights = feature_weights
+        self.include_features_in_adj_matrix = include_features_in_adj_matrix  # Bool about including features in ajd.
+        self.include_features_in_G_matrix = include_features_in_G_matrix  # Bool about include features in G.
+        self.G_matrix_p_function = G_matrix_p_function
+        #How to normmalize extra features.
+        self.norm_node_features_std = norm_node_features_std
+        self.norm_node_features_cap_std = norm_node_features_cap_std
+        self.norm_node_features_0_1 = norm_node_features_0_1
+
+        # Mesh/points characteristics
+        self.n_points = vtk_mesh.GetNumberOfPoints()  # store number points in mesh.
+        # Iterate over the points saving their 3d location.
+        self.points = np.zeros((self.n_points, 3))
+        for point_idx in range(self.n_points):
+            self.points[point_idx, :] = self.vtk_mesh.GetPoint(point_idx)
+        self.pts_scale_range = np.ptp(self.points, axis=0)  # range points in each axis
+        self.max_pts_scale_range = np.max(self.pts_scale_range)  # max range points
+        self.mean_pts_scale_range = np.mean(self.pts_scale_range)  # mean range points (per axis)
+        # create normalized version of point coordinates.
+        self.normed_points = (self.points - np.min(self.points, axis=0)) / self.mean_pts_scale_range
+
+        # Assign matrices that will be used for laplacian and eigen decomposition.
+        self.adjacency_matrix = sparse.lil_matrix((vtk_mesh.GetNumberOfPoints(), vtk_mesh.GetNumberOfPoints()))
+        self.degree_matrix = None
+        self.degree_matrix_inv = None
+        self.laplacian_matrix = None
+        self.G = None
+
+        # Eigen values that will be calculated &amp; their characteristics.
+        self.eig_vals = None
+        self.eig_vecs = None
+        self.eig_val_gap = None
+        self.rand_idxs = self.get_list_rand_idxs(n_rand_samples)
+
+        # Calculate node features &amp; store in self.node_features for use.
+        self.node_features = []
+        for feature in list_features_to_calc:
+            self.node_features += list(features_dictionary[feature](self.vtk_mesh))
+        for feature in list_features_to_get_from_mesh:
+            n = vtk_mesh.GetPointData().GetNumberOfArrays()
+            for idx in range(n):
+                if vtk_mesh.GetPointData().GetArray(idx).GetName() == feature:
+                    break
+                elif idx == n - 1:
+                    print(&#39;NO SCALARS WITH SPECIFIED NAME&#39;)
+                    idx = np.nan
+                    break
+                else:
+                    pass
+
+            self.node_features += list([vtk_to_numpy(vtk_mesh.GetPointData().GetArray(idx)),])
+
+        # normalize the node features w/ options for how it is normalized.
+        self.norm_node_features(norm_using_std=self.norm_node_features_std,
+                                norm_range_0_to_1=self.norm_node_features_0_1,
+                                cap_std=self.norm_node_features_cap_std)
+        self.n_extra_features = len(self.node_features)  # number of extra features used.
+        # Get version of extra features that are scaled up to the
+        self.mean_xyz_range_scaled_features = []
+        if self.n_extra_features &gt; 0:
+            for ftr_idx in range(len(self.node_features)):
+                self.mean_xyz_range_scaled_features.append(self.node_features[ftr_idx] * self.mean_pts_scale_range)
+
+    def norm_node_features(self, norm_using_std=True, norm_range_0_to_1=True, cap_std=3):
+        &#34;&#34;&#34;
+        Need multiple methods of normalizing the node_features.
+
+        :param cap_std:
+        :param norm_range_0_to_1:
+        :param norm_using_std:
+        :return:
+        &#34;&#34;&#34;
+        for idx in range(len(self.node_features)):
+            if norm_using_std is True:
+                self.node_features[idx] = (self.node_features[idx] - np.mean(self.node_features[idx])) \
+                                          / np.std(self.node_features[idx])
+                if cap_std is not False:
+                    self.node_features[idx][self.node_features[idx] &gt; cap_std] = cap_std
+                    self.node_features[idx][self.node_features[idx] &lt; -cap_std] = -cap_std
+
+            if norm_range_0_to_1 is True:
+                self.node_features[idx] = (self.node_features[idx] - np.min(self.node_features[idx]))\
+                                          / np.ptp(self.node_features[idx])
+
+    &#34;&#34;&#34;
+    Functions to create matrices needed for laplacian and eigen decomposition. 
+    &#34;&#34;&#34;
+
+    def get_weighted_adjacency_matrix(self):
+        &#39;&#39;&#39;
+        Get/fill the adjacency matrix for the mesh vtk_mesh
+        - Add options to enable adding the features
+        :return:
+        &#39;&#39;&#39;
+
+        n_cells = self.vtk_mesh.GetNumberOfCells()
+        for cell_idx in range(n_cells):
+            cell = self.vtk_mesh.GetCell(cell_idx)
+            for edge_idx in range(cell.GetNumberOfEdges()):
+                edge = cell.GetEdge(edge_idx)
+                point_1 = int(edge.GetPointId(0))
+                point_2 = int(edge.GetPointId(1))
+
+                X_pt1 = np.asarray(self.vtk_mesh.GetPoint(point_1))
+                X_pt2 = np.asarray(self.vtk_mesh.GetPoint(point_2))
+
+                if (self.n_extra_features &gt; 0) &amp; (self.include_features_in_adj_matrix is True):
+                    for ftr_idx in range(self.n_extra_features):
+                        # Append the &#34;features&#34; to the x/y/z position. Use features that have been scaled to be in
+                        # the range of the max range axis of xyz.
+                        X_pt1 = np.concatenate((X_pt1, self.mean_xyz_range_scaled_features[ftr_idx][point_1, None]))
+                        X_pt2 = np.concatenate((X_pt2, self.mean_xyz_range_scaled_features[ftr_idx][point_2, None]))
+
+                distance = np.sqrt(np.sum(np.square(X_pt1 -
+                                                    X_pt2)))
+                self.adjacency_matrix[point_1, point_2] = 1. / distance
+
+    def get_G_matrix(self, p_function=&#39;exp&#39;):
+        &#34;&#34;&#34;
+        Get G matrix for creating laplacian laplacian = G * (D-W)
+        p_function options include:
+            - exp
+            - log
+            - square
+            -otherwise just make sure it is 0 or higher.
+        :param p_function:
+        :return:
+        &#34;&#34;&#34;
+        if (self.n_extra_features &gt; 0) &amp; (self.include_features_in_G_matrix is True):
+            self.G = np.zeros(self.n_points)
+            for k in range(self.n_extra_features):
+                # Add up the normalized node _
+                if p_function == &#39;exp&#39;:
+                    G = np.exp(self.node_features[k])
+                elif p_function == &#39;log&#39;:
+                    # use log function. Ensure that all values are above zero (make it 1 and up).
+                    G = np.log(self.node_features[k] - np.min(self.node_features[k]) + 1)
+                elif p_function == &#39;square&#39;:
+                    G = self.node_features[k]**2
+                else:
+                    # Otherwise, just ensure features are 0 and higher.
+                    G = self.node_features[k] - np.min(self.node_features[k])
+                # Scale features to be in range of degree_matrix. Then, multople by the feature weighting.
+                G_scaling = self.feature_weights[k, k] * np.ptp(self.degree_matrix) / np.ptp(G)
+                self.G += G * G_scaling  # Add scaled feature values to to G matrix.
+            self.G = self.G / self.n_extra_features  # Get average self.G across features.
+            self.G = sparse.diags(self.G)
+            self.G = self.G.multiply(self.degree_matrix_inv.diagonal())
+            # self.G = self.degree_matrix_inv @ self.G
+
+        else:
+            self.G = self.degree_matrix_inv
+
+    def get_degree_matrix(self):
+        self.degree_matrix = np.asarray(self.adjacency_matrix.sum(axis=1))
+        self.degree_matrix = sparse.diags(self.degree_matrix[:, 0])
+        self.degree_matrix_inv = sparse.diags((self.degree_matrix.diagonal() + 1e-8)**-1)
+
+    def get_laplacian_matrix(self):
+        # Ensure that G is defined.
+        if self.G is None:
+            self.G = self.degree_matrix_inv
+        laplacian = self.degree_matrix - self.adjacency_matrix
+        self.laplacian_matrix = self.G @ laplacian
+
+    def get_graph_spectrum(self):
+        self.get_weighted_adjacency_matrix()
+        self.get_degree_matrix()
+        self.get_G_matrix(p_function=self.G_matrix_p_function)
+        self.get_laplacian_matrix()
+
+        # sparse.csc_matrix was faster than sparse.csr_matrix on tests of 5k square matrix.
+        # (359+/- 6.7 ms vs 379 +/- 20.2 ms  including 10 iterations per run and 7 runs).
+        # providing sigma (a value to find eigenvalues near to) slows things down considerably.
+        # providing `ncv` doesnt change things too much (maybe slower if anything).
+        # The sparse versions are even faster than using eigh on a dense matrix.
+        # Therefore, use sparse matrices for all circumstances.
+        # laplacian_sparse = sparse.csc_matrix(self.laplacian_matrix)
+        print(&#39;Beginning Eigen Decomposition&#39;)
+
+        self.eig_vals, self.eig_vecs = recursive_eig(self.laplacian_matrix,
+                                           k=self.n_spectral_features + 1,
+                                           n_k_needed=self.n_spectral_features,
+                                           k_buffer=1)
+
+        print(&#39;All final eigenvalues are: \n{}&#39;.format(self.eig_vals))
+        print(&#39;-&#39; * 72)
+        print(&#39;Final eigenvalues of interest are: \n{}&#39;.format(self.eig_vals))
+
+        if self.norm_eig_vecs is True:
+            self.eig_vecs = (self.eig_vecs - np.min(self.eig_vecs, axis=0)) / np.ptp(self.eig_vecs, axis=0) - 0.5
+
+    &#34;&#34;&#34;
+    Get sub samples/measurements from/of eigenvectors or characteristics about them. 
+    &#34;&#34;&#34;
+
+    def get_eig_val_gap(self):
+        self.eig_val_gap = np.mean(np.diff(self.eig_vals))
+
+    def get_rand_eig_vecs(self):
+        return self.eig_vecs[self.rand_idxs, :]
+
+    def get_rand_normalized_points(self):
+        return (self.points[self.rand_idxs, :] - np.min(self.points[self.rand_idxs, :], axis=0)) \
+               / np.ptp(self.points[self.rand_idxs, :], axis=0)
+
+    def get_list_rand_idxs(self, n_rand_samples, replace=False, force_randomization=False):
+        &#34;&#34;&#34;
+        Return idxs of random samples
+        - By default do not use replacement (each sample should only be able to be taken one)
+        - If n_rand_samples is more than the number of points, should just return idxs to all points.
+        :param force_randomization:
+        :param n_rand_samples:
+        :param replace:
+        :return:
+        &#34;&#34;&#34;
+        if n_rand_samples &gt; self.n_points:
+            list_points = np.arange(self.n_points)
+            if force_randomization is True:
+                np.shuffle(list_points)
+            return list_points
+
+        return np.random.choice(self.n_points, size=n_rand_samples, replace=replace)
+
+    &#34;&#34;&#34;
+    View meshes/points/results. 
+    &#34;&#34;&#34;
+
+    def view_mesh_existing_scalars(self):
+        plotter = Viewer(geometries=[self.vtk_mesh]
+                         )
+        return plotter
+
+    def view_mesh_eig_vec(self, eig_vec=0):
+        tmp_mesh = vtk_deep_copy(self.vtk_mesh)
+        tmp_mesh.GetPointData().SetScalars(numpy_to_vtk(np.ascontiguousarray(self.eig_vecs[:, eig_vec])))
+        plotter = Viewer(geometries=[tmp_mesh]
+                         )
+        return plotter
+
+    def view_mesh_features(self, feature_idx=0):
+        tmp_mesh = vtk_deep_copy(self.vtk_mesh)
+        tmp_mesh.GetPointData().SetScalars(numpy_to_vtk(np.ascontiguousarray((self.node_features[feature_idx]))))
+        plotter = Viewer(geometries=[tmp_mesh]
+                         )
+        return plotter
+
+    &#34;&#34;&#34;
+    Filter graph f(x)s 
+    &#34;&#34;&#34;
+
+    def mean_filter_graph(self, values, iterations=300):
+        &#34;&#34;&#34;
+        See below for copyright of this particular function:
+        However, note that some changes have been made as the original was in Matlab, and included more options etc.
+
+        Copyright (C) 2002, 2003 Leo Grady &lt;lgrady@cns.bu.edu&gt;
+        Computer Vision and Computational Neuroscience Lab
+        Department of Cognitive and Neural Systems
+        Boston University
+        Boston, MA  02215
+
+        This program is free software; you can redistribute it and/or
+        modify it under the terms of the GNU General Public License
+        as published by the Free Software Foundation; either version 2
+        of the License, or (at your option) any later version.
+
+        This program is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU General Public License for more details.
+
+        You should have received a copy of the GNU General Public License
+        along with this program; if not, write to the Free Software
+        Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+        :param values:
+        :param iterations:
+        :return:
+        &#34;&#34;&#34;
+        D_inv = sparse.diags(1. / (1 + np.asarray(self.adjacency_matrix.sum(axis=1))[:, 0]))
+        out_values = values
+        average_mat = D_inv @ (self.adjacency_matrix + sparse.eye(self.adjacency_matrix.shape[0]))
+        for iteration in range(iterations):
+            out_values = average_mat @ out_values
+        return out_values</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="pyfocusr.graph.Graph.get_G_matrix"><code class="name flex">
+<span>def <span class="ident">get_G_matrix</span></span>(<span>self, p_function='exp')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get G matrix for creating laplacian laplacian = G * (D-W)
+p_function options include:
+- exp
+- log
+- square
+-otherwise just make sure it is 0 or higher.
+:param p_function:
+:return:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_G_matrix(self, p_function=&#39;exp&#39;):
+    &#34;&#34;&#34;
+    Get G matrix for creating laplacian laplacian = G * (D-W)
+    p_function options include:
+        - exp
+        - log
+        - square
+        -otherwise just make sure it is 0 or higher.
+    :param p_function:
+    :return:
+    &#34;&#34;&#34;
+    if (self.n_extra_features &gt; 0) &amp; (self.include_features_in_G_matrix is True):
+        self.G = np.zeros(self.n_points)
+        for k in range(self.n_extra_features):
+            # Add up the normalized node _
+            if p_function == &#39;exp&#39;:
+                G = np.exp(self.node_features[k])
+            elif p_function == &#39;log&#39;:
+                # use log function. Ensure that all values are above zero (make it 1 and up).
+                G = np.log(self.node_features[k] - np.min(self.node_features[k]) + 1)
+            elif p_function == &#39;square&#39;:
+                G = self.node_features[k]**2
+            else:
+                # Otherwise, just ensure features are 0 and higher.
+                G = self.node_features[k] - np.min(self.node_features[k])
+            # Scale features to be in range of degree_matrix. Then, multople by the feature weighting.
+            G_scaling = self.feature_weights[k, k] * np.ptp(self.degree_matrix) / np.ptp(G)
+            self.G += G * G_scaling  # Add scaled feature values to to G matrix.
+        self.G = self.G / self.n_extra_features  # Get average self.G across features.
+        self.G = sparse.diags(self.G)
+        self.G = self.G.multiply(self.degree_matrix_inv.diagonal())
+        # self.G = self.degree_matrix_inv @ self.G
+
+    else:
+        self.G = self.degree_matrix_inv</code></pre>
+</details>
+</dd>
+<dt id="pyfocusr.graph.Graph.get_degree_matrix"><code class="name flex">
+<span>def <span class="ident">get_degree_matrix</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_degree_matrix(self):
+    self.degree_matrix = np.asarray(self.adjacency_matrix.sum(axis=1))
+    self.degree_matrix = sparse.diags(self.degree_matrix[:, 0])
+    self.degree_matrix_inv = sparse.diags((self.degree_matrix.diagonal() + 1e-8)**-1)</code></pre>
+</details>
+</dd>
+<dt id="pyfocusr.graph.Graph.get_eig_val_gap"><code class="name flex">
+<span>def <span class="ident">get_eig_val_gap</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_eig_val_gap(self):
+    self.eig_val_gap = np.mean(np.diff(self.eig_vals))</code></pre>
+</details>
+</dd>
+<dt id="pyfocusr.graph.Graph.get_graph_spectrum"><code class="name flex">
+<span>def <span class="ident">get_graph_spectrum</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_graph_spectrum(self):
+    self.get_weighted_adjacency_matrix()
+    self.get_degree_matrix()
+    self.get_G_matrix(p_function=self.G_matrix_p_function)
+    self.get_laplacian_matrix()
+
+    # sparse.csc_matrix was faster than sparse.csr_matrix on tests of 5k square matrix.
+    # (359+/- 6.7 ms vs 379 +/- 20.2 ms  including 10 iterations per run and 7 runs).
+    # providing sigma (a value to find eigenvalues near to) slows things down considerably.
+    # providing `ncv` doesnt change things too much (maybe slower if anything).
+    # The sparse versions are even faster than using eigh on a dense matrix.
+    # Therefore, use sparse matrices for all circumstances.
+    # laplacian_sparse = sparse.csc_matrix(self.laplacian_matrix)
+    print(&#39;Beginning Eigen Decomposition&#39;)
+
+    self.eig_vals, self.eig_vecs = recursive_eig(self.laplacian_matrix,
+                                       k=self.n_spectral_features + 1,
+                                       n_k_needed=self.n_spectral_features,
+                                       k_buffer=1)
+
+    print(&#39;All final eigenvalues are: \n{}&#39;.format(self.eig_vals))
+    print(&#39;-&#39; * 72)
+    print(&#39;Final eigenvalues of interest are: \n{}&#39;.format(self.eig_vals))
+
+    if self.norm_eig_vecs is True:
+        self.eig_vecs = (self.eig_vecs - np.min(self.eig_vecs, axis=0)) / np.ptp(self.eig_vecs, axis=0) - 0.5</code></pre>
+</details>
+</dd>
+<dt id="pyfocusr.graph.Graph.get_laplacian_matrix"><code class="name flex">
+<span>def <span class="ident">get_laplacian_matrix</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_laplacian_matrix(self):
+    # Ensure that G is defined.
+    if self.G is None:
+        self.G = self.degree_matrix_inv
+    laplacian = self.degree_matrix - self.adjacency_matrix
+    self.laplacian_matrix = self.G @ laplacian</code></pre>
+</details>
+</dd>
+<dt id="pyfocusr.graph.Graph.get_list_rand_idxs"><code class="name flex">
+<span>def <span class="ident">get_list_rand_idxs</span></span>(<span>self, n_rand_samples, replace=False, force_randomization=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return idxs of random samples
+- By default do not use replacement (each sample should only be able to be taken one)
+- If n_rand_samples is more than the number of points, should just return idxs to all points.
+:param force_randomization:
+:param n_rand_samples:
+:param replace:
+:return:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_list_rand_idxs(self, n_rand_samples, replace=False, force_randomization=False):
+    &#34;&#34;&#34;
+    Return idxs of random samples
+    - By default do not use replacement (each sample should only be able to be taken one)
+    - If n_rand_samples is more than the number of points, should just return idxs to all points.
+    :param force_randomization:
+    :param n_rand_samples:
+    :param replace:
+    :return:
+    &#34;&#34;&#34;
+    if n_rand_samples &gt; self.n_points:
+        list_points = np.arange(self.n_points)
+        if force_randomization is True:
+            np.shuffle(list_points)
+        return list_points
+
+    return np.random.choice(self.n_points, size=n_rand_samples, replace=replace)</code></pre>
+</details>
+</dd>
+<dt id="pyfocusr.graph.Graph.get_rand_eig_vecs"><code class="name flex">
+<span>def <span class="ident">get_rand_eig_vecs</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_rand_eig_vecs(self):
+    return self.eig_vecs[self.rand_idxs, :]</code></pre>
+</details>
+</dd>
+<dt id="pyfocusr.graph.Graph.get_rand_normalized_points"><code class="name flex">
+<span>def <span class="ident">get_rand_normalized_points</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_rand_normalized_points(self):
+    return (self.points[self.rand_idxs, :] - np.min(self.points[self.rand_idxs, :], axis=0)) \
+           / np.ptp(self.points[self.rand_idxs, :], axis=0)</code></pre>
+</details>
+</dd>
+<dt id="pyfocusr.graph.Graph.get_weighted_adjacency_matrix"><code class="name flex">
+<span>def <span class="ident">get_weighted_adjacency_matrix</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get/fill the adjacency matrix for the mesh vtk_mesh
+- Add options to enable adding the features
+:return:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_weighted_adjacency_matrix(self):
+    &#39;&#39;&#39;
+    Get/fill the adjacency matrix for the mesh vtk_mesh
+    - Add options to enable adding the features
+    :return:
+    &#39;&#39;&#39;
+
+    n_cells = self.vtk_mesh.GetNumberOfCells()
+    for cell_idx in range(n_cells):
+        cell = self.vtk_mesh.GetCell(cell_idx)
+        for edge_idx in range(cell.GetNumberOfEdges()):
+            edge = cell.GetEdge(edge_idx)
+            point_1 = int(edge.GetPointId(0))
+            point_2 = int(edge.GetPointId(1))
+
+            X_pt1 = np.asarray(self.vtk_mesh.GetPoint(point_1))
+            X_pt2 = np.asarray(self.vtk_mesh.GetPoint(point_2))
+
+            if (self.n_extra_features &gt; 0) &amp; (self.include_features_in_adj_matrix is True):
+                for ftr_idx in range(self.n_extra_features):
+                    # Append the &#34;features&#34; to the x/y/z position. Use features that have been scaled to be in
+                    # the range of the max range axis of xyz.
+                    X_pt1 = np.concatenate((X_pt1, self.mean_xyz_range_scaled_features[ftr_idx][point_1, None]))
+                    X_pt2 = np.concatenate((X_pt2, self.mean_xyz_range_scaled_features[ftr_idx][point_2, None]))
+
+            distance = np.sqrt(np.sum(np.square(X_pt1 -
+                                                X_pt2)))
+            self.adjacency_matrix[point_1, point_2] = 1. / distance</code></pre>
+</details>
+</dd>
+<dt id="pyfocusr.graph.Graph.mean_filter_graph"><code class="name flex">
+<span>def <span class="ident">mean_filter_graph</span></span>(<span>self, values, iterations=300)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>See below for copyright of this particular function:
+However, note that some changes have been made as the original was in Matlab, and included more options etc.</p>
+<p>Copyright (C) 2002, 2003 Leo Grady <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#108;&#103;&#114;&#97;&#100;&#121;&#64;&#99;&#110;&#115;&#46;&#98;&#117;&#46;&#101;&#100;&#117;">&#108;&#103;&#114;&#97;&#100;&#121;&#64;&#99;&#110;&#115;&#46;&#98;&#117;&#46;&#101;&#100;&#117;</a>
+Computer Vision and Computational Neuroscience Lab
+Department of Cognitive and Neural Systems
+Boston University
+Boston, MA
+02215</p>
+<p>This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.</p>
+<p>This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the
+GNU General Public License for more details.</p>
+<p>You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.</p>
+<p>:param values:
+:param iterations:
+:return:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mean_filter_graph(self, values, iterations=300):
+    &#34;&#34;&#34;
+    See below for copyright of this particular function:
+    However, note that some changes have been made as the original was in Matlab, and included more options etc.
+
+    Copyright (C) 2002, 2003 Leo Grady &lt;lgrady@cns.bu.edu&gt;
+    Computer Vision and Computational Neuroscience Lab
+    Department of Cognitive and Neural Systems
+    Boston University
+    Boston, MA  02215
+
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+    :param values:
+    :param iterations:
+    :return:
+    &#34;&#34;&#34;
+    D_inv = sparse.diags(1. / (1 + np.asarray(self.adjacency_matrix.sum(axis=1))[:, 0]))
+    out_values = values
+    average_mat = D_inv @ (self.adjacency_matrix + sparse.eye(self.adjacency_matrix.shape[0]))
+    for iteration in range(iterations):
+        out_values = average_mat @ out_values
+    return out_values</code></pre>
+</details>
+</dd>
+<dt id="pyfocusr.graph.Graph.norm_node_features"><code class="name flex">
+<span>def <span class="ident">norm_node_features</span></span>(<span>self, norm_using_std=True, norm_range_0_to_1=True, cap_std=3)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Need multiple methods of normalizing the node_features.</p>
+<p>:param cap_std:
+:param norm_range_0_to_1:
+:param norm_using_std:
+:return:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def norm_node_features(self, norm_using_std=True, norm_range_0_to_1=True, cap_std=3):
+    &#34;&#34;&#34;
+    Need multiple methods of normalizing the node_features.
+
+    :param cap_std:
+    :param norm_range_0_to_1:
+    :param norm_using_std:
+    :return:
+    &#34;&#34;&#34;
+    for idx in range(len(self.node_features)):
+        if norm_using_std is True:
+            self.node_features[idx] = (self.node_features[idx] - np.mean(self.node_features[idx])) \
+                                      / np.std(self.node_features[idx])
+            if cap_std is not False:
+                self.node_features[idx][self.node_features[idx] &gt; cap_std] = cap_std
+                self.node_features[idx][self.node_features[idx] &lt; -cap_std] = -cap_std
+
+        if norm_range_0_to_1 is True:
+            self.node_features[idx] = (self.node_features[idx] - np.min(self.node_features[idx]))\
+                                      / np.ptp(self.node_features[idx])</code></pre>
+</details>
+</dd>
+<dt id="pyfocusr.graph.Graph.view_mesh_eig_vec"><code class="name flex">
+<span>def <span class="ident">view_mesh_eig_vec</span></span>(<span>self, eig_vec=0)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def view_mesh_eig_vec(self, eig_vec=0):
+    tmp_mesh = vtk_deep_copy(self.vtk_mesh)
+    tmp_mesh.GetPointData().SetScalars(numpy_to_vtk(np.ascontiguousarray(self.eig_vecs[:, eig_vec])))
+    plotter = Viewer(geometries=[tmp_mesh]
+                     )
+    return plotter</code></pre>
+</details>
+</dd>
+<dt id="pyfocusr.graph.Graph.view_mesh_existing_scalars"><code class="name flex">
+<span>def <span class="ident">view_mesh_existing_scalars</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def view_mesh_existing_scalars(self):
+    plotter = Viewer(geometries=[self.vtk_mesh]
+                     )
+    return plotter</code></pre>
+</details>
+</dd>
+<dt id="pyfocusr.graph.Graph.view_mesh_features"><code class="name flex">
+<span>def <span class="ident">view_mesh_features</span></span>(<span>self, feature_idx=0)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def view_mesh_features(self, feature_idx=0):
+    tmp_mesh = vtk_deep_copy(self.vtk_mesh)
+    tmp_mesh.GetPointData().SetScalars(numpy_to_vtk(np.ascontiguousarray((self.node_features[feature_idx]))))
+    plotter = Viewer(geometries=[tmp_mesh]
+                     )
+    return plotter</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pyfocusr" href="index.html">pyfocusr</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pyfocusr.graph.recursive_eig" href="#pyfocusr.graph.recursive_eig">recursive_eig</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pyfocusr.graph.Graph" href="#pyfocusr.graph.Graph">Graph</a></code></h4>
+<ul class="">
+<li><code><a title="pyfocusr.graph.Graph.get_G_matrix" href="#pyfocusr.graph.Graph.get_G_matrix">get_G_matrix</a></code></li>
+<li><code><a title="pyfocusr.graph.Graph.get_degree_matrix" href="#pyfocusr.graph.Graph.get_degree_matrix">get_degree_matrix</a></code></li>
+<li><code><a title="pyfocusr.graph.Graph.get_eig_val_gap" href="#pyfocusr.graph.Graph.get_eig_val_gap">get_eig_val_gap</a></code></li>
+<li><code><a title="pyfocusr.graph.Graph.get_graph_spectrum" href="#pyfocusr.graph.Graph.get_graph_spectrum">get_graph_spectrum</a></code></li>
+<li><code><a title="pyfocusr.graph.Graph.get_laplacian_matrix" href="#pyfocusr.graph.Graph.get_laplacian_matrix">get_laplacian_matrix</a></code></li>
+<li><code><a title="pyfocusr.graph.Graph.get_list_rand_idxs" href="#pyfocusr.graph.Graph.get_list_rand_idxs">get_list_rand_idxs</a></code></li>
+<li><code><a title="pyfocusr.graph.Graph.get_rand_eig_vecs" href="#pyfocusr.graph.Graph.get_rand_eig_vecs">get_rand_eig_vecs</a></code></li>
+<li><code><a title="pyfocusr.graph.Graph.get_rand_normalized_points" href="#pyfocusr.graph.Graph.get_rand_normalized_points">get_rand_normalized_points</a></code></li>
+<li><code><a title="pyfocusr.graph.Graph.get_weighted_adjacency_matrix" href="#pyfocusr.graph.Graph.get_weighted_adjacency_matrix">get_weighted_adjacency_matrix</a></code></li>
+<li><code><a title="pyfocusr.graph.Graph.mean_filter_graph" href="#pyfocusr.graph.Graph.mean_filter_graph">mean_filter_graph</a></code></li>
+<li><code><a title="pyfocusr.graph.Graph.norm_node_features" href="#pyfocusr.graph.Graph.norm_node_features">norm_node_features</a></code></li>
+<li><code><a title="pyfocusr.graph.Graph.view_mesh_eig_vec" href="#pyfocusr.graph.Graph.view_mesh_eig_vec">view_mesh_eig_vec</a></code></li>
+<li><code><a title="pyfocusr.graph.Graph.view_mesh_existing_scalars" href="#pyfocusr.graph.Graph.view_mesh_existing_scalars">view_mesh_existing_scalars</a></code></li>
+<li><code><a title="pyfocusr.graph.Graph.view_mesh_features" href="#pyfocusr.graph.Graph.view_mesh_features">view_mesh_features</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
