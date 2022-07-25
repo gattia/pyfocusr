@@ -1,7 +1,7 @@
 import numpy as np
-from scipy.stats import wasserstein_distance
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial import KDTree
+from scipy.stats import wasserstein_distance
 
 from .main import *
 
@@ -10,30 +10,36 @@ class eigsort(object):
     """
     Class to sort eigen vectors/ spectral coordinates necessary before aligning/registering spectral coordinates.
     """
-    def __init__(self,
-                 graph_target,
-                 graph_source,
-                 n_features,
-                 target_as_reference=True, # if `True``, then target order used as reference and source permuted
-                                           # to match target. If `False`, then source order used as reference and
-                                           # target is permuted. 
-                 ):
+
+    def __init__(
+        self,
+        graph_target,
+        graph_source,
+        n_features,
+        target_as_reference=True,  # if `True``, then target order used as reference and source permuted
+        # to match target. If `False`, then source order used as reference and
+        # target is permuted.
+    ):
 
         # Input variables
 
         self.graph_target = graph_target  # Target mesh (match source eigs to this)
         self.graph_source = graph_source  # Source mesh (eigs to re-order/flip to match target).
-        self.n_features = n_features  # number of features (eigenvecs/values) to consider during alignment.
-        self.target_as_reference = target_as_reference  # If true, then the target mesh is used as the reference
+        self.n_features = n_features  # n features (eigvecs/vals) to consider during reg.
+        self.target_as_reference = target_as_reference  # If true, target mesh is used as ref
 
         # Build/create specified data needed for alignment.
 
         # Points
-        self.rand_target_points = self.graph_target.get_rand_normalized_points()  # Get rand target points for alignment
-        self.rand_source_points = self.graph_source.get_rand_normalized_points()  # Get rand source points for alignment
+        # Get rand target points for alignment
+        self.rand_target_points = self.graph_target.get_rand_normalized_points()
+        # Get rand source points for alignment
+        self.rand_source_points = self.graph_source.get_rand_normalized_points()
         # Eigenvectors
-        self.rand_target_eig_vecs = self.graph_target.get_rand_eig_vecs()  # Get eigvecs of rand target points
-        self.rand_source_eig_vecs = self.graph_source.get_rand_eig_vecs()  # Get eigvecs of rand source points
+        # Get eigvecs of rand target points
+        self.rand_target_eig_vecs = self.graph_target.get_rand_eig_vecs()
+        # Get eigvecs of rand source points
+        self.rand_source_eig_vecs = self.graph_source.get_rand_eig_vecs()
 
         # Interim values used in class.
 
@@ -92,8 +98,12 @@ class eigsort(object):
         # If a "flipped pair" is also a "best match", then store the pairs in flipped_pairs so that the corresponding
         # source eig_vecs can be flipped to match the target eig_vec orientation.
 
-        flipped_pairs = [p2 for p1 in zip(target_flipped, source_flipped) for p2 in zip(target_matches, source_matches) if
-                         p2 == p1]
+        flipped_pairs = [
+            p2
+            for p1 in zip(target_flipped, source_flipped)
+            for p2 in zip(target_matches, source_matches)
+            if p2 == p1
+        ]
         # Flipped pairs are used to flip the sign of the source eig_vecs.
 
         for mode_0, mode_1 in flipped_pairs:
@@ -104,27 +114,31 @@ class eigsort(object):
         # The source eig_vecs are re-ordered to match the order from the target eig_vecs - based on the best matches
         # Identified using Hungarian algorithm (linear_sum_assignment) on the dissimilarity matrix Q.
         if self.target_as_reference is True:
-            self.graph_source.eig_vecs[:, target_matches] = self.graph_source.eig_vecs[:, source_matches]
+            self.graph_source.eig_vecs[:, target_matches] = self.graph_source.eig_vecs[
+                :, source_matches
+            ]
         elif self.target_as_reference is False:
-            self.graph_target.eig_vecs[:, source_matches] = self.graph_target.eig_vecs[:, target_matches]
-        print_header('Eigenvector Sorting Results')
+            self.graph_target.eig_vecs[:, source_matches] = self.graph_target.eig_vecs[
+                :, target_matches
+            ]
+        print_header("Eigenvector Sorting Results")
         if self.target_as_reference is True:
-            print('Using target eigenmaps as the reference')
+            print("Using target eigenmaps as the reference")
         elif self.target_as_reference is False:
-            print('Using source eigenmaps as the reference')
-        print('The matches for eigenvectors were as follows:')
-        print('Target\t|  Source')
+            print("Using source eigenmaps as the reference")
+        print("The matches for eigenvectors were as follows:")
+        print("Target\t|  Source")
         for matched_pair in zip(target_matches, source_matches):
             source_value = str(matched_pair[1])
             target_value = str(matched_pair[0])
             if matched_pair in flipped_pairs:
                 if self.target_as_reference is True:
-                    source_value = '-' + source_value
+                    source_value = "-" + source_value
                 elif self.target_as_reference is False:
-                    target_value = '-' + target_value
+                    target_value = "-" + target_value
 
-            print('{:6}\t|  {:6}'.format(target_value, source_value))
-        print('*Negative source values means those eigenvectors were flipped*\n ')
+            print("{:6}\t|  {:6}".format(target_value, source_value))
+        print("*Negative source values means those eigenvectors were flipped*\n ")
 
     def calc_c_lambda(self):
         """
@@ -137,13 +151,14 @@ class eigsort(object):
             if graph.eig_val_gap is None:
                 graph.get_eig_val_gap()
         # average the gap of mesh 1 and mesh 2.
-        eigen_gap = (self.graph_target.eig_val_gap + self.graph_source.eig_val_gap)/2
+        eigen_gap = (self.graph_target.eig_val_gap + self.graph_source.eig_val_gap) / 2
         # Calculate difference in eigenvalues between meshes normalizing to eigen_gap.
         for i in range(self.n_features):
             for j in range(self.n_features):
-                self.c_lambda[i, j] = np.exp((self.graph_target.eig_vals[i] - self.graph_source.eig_vals[j]) ** 2 /
-                                             (2 * eigen_gap ** 2)
-                                             )
+                self.c_lambda[i, j] = np.exp(
+                    (self.graph_target.eig_vals[i] - self.graph_source.eig_vals[j]) ** 2
+                    / (2 * eigen_gap**2)
+                )
 
     def calc_c_hist(self):
         """
@@ -165,18 +180,14 @@ class eigsort(object):
         eps = np.finfo(float).eps
         for i in range(self.n_features):
             for j in range(self.n_features):
-                self.c_hist[i, j] = wasserstein_distance(np.log(self.rand_target_eig_vecs[:, i]
-                                                                + 0.5
-                                                                + eps),
-                                                         np.log(self.rand_source_eig_vecs[:, j]
-                                                                + 0.5
-                                                                + eps))
-                self.c_hist_f[i, j] = wasserstein_distance(np.log(self.rand_target_eig_vecs[:, i]
-                                                                  + 0.5
-                                                                  + eps),
-                                                           np.log(-self.rand_source_eig_vecs[:, j]
-                                                                  + 0.5
-                                                                  + eps))
+                self.c_hist[i, j] = wasserstein_distance(
+                    np.log(self.rand_target_eig_vecs[:, i] + 0.5 + eps),
+                    np.log(self.rand_source_eig_vecs[:, j] + 0.5 + eps),
+                )
+                self.c_hist_f[i, j] = wasserstein_distance(
+                    np.log(self.rand_target_eig_vecs[:, i] + 0.5 + eps),
+                    np.log(-self.rand_source_eig_vecs[:, j] + 0.5 + eps),
+                )
 
     def calc_c_spatial(self):
         """
@@ -197,12 +208,30 @@ class eigsort(object):
         # Paper says that it used the sum of squares.
         for i in range(self.n_features):
             for j in range(self.n_features):
-                self.c_spatial[i, j] = np.sqrt(np.sum((self.rand_source_eig_vecs[idx_source_for_each_target_pt, j]
-                                                      - self.rand_target_eig_vecs[:, i])**2)
-                                               )/self.rand_target_eig_vecs.shape[0]
-                self.c_spatial_f[i, j] = np.sqrt(np.sum((-self.rand_source_eig_vecs[idx_source_for_each_target_pt, j]
-                                                        - self.rand_target_eig_vecs[:, i])**2)
-                                                 )/self.rand_target_eig_vecs.shape[0]
+                self.c_spatial[i, j] = (
+                    np.sqrt(
+                        np.sum(
+                            (
+                                self.rand_source_eig_vecs[idx_source_for_each_target_pt, j]
+                                - self.rand_target_eig_vecs[:, i]
+                            )
+                            ** 2
+                        )
+                    )
+                    / self.rand_target_eig_vecs.shape[0]
+                )
+                self.c_spatial_f[i, j] = (
+                    np.sqrt(
+                        np.sum(
+                            (
+                                -self.rand_source_eig_vecs[idx_source_for_each_target_pt, j]
+                                - self.rand_target_eig_vecs[:, i]
+                            )
+                            ** 2
+                        )
+                    )
+                    / self.rand_target_eig_vecs.shape[0]
+                )
 
     def sort_eigenmaps(self):
         """
@@ -216,4 +245,6 @@ class eigsort(object):
         self.calc_c_spatial()
         self.eigen_sort()
 
-        return self.Q  # Q was calculated in eigen_sort and is the cost associated with each of the final pairings.
+        return (
+            self.Q
+        )  # Q was calculated in eigen_sort and is the cost associated with each of the final pairings.

@@ -9,14 +9,16 @@ def read_vtk_mesh(path_to_file):
     return reader.GetOutput()
 
 
-def icp_transform(target, source, numberOfIterations=100, number_landmarks=1000, transform_mode='rigid'):
+def icp_transform(
+    target, source, numberOfIterations=100, number_landmarks=1000, transform_mode="rigid"
+):
     icp = vtk.vtkIterativeClosestPointTransform()
-    if transform_mode == 'rigid':
+    if transform_mode == "rigid":
         icp.GetLandmarkTransform().SetModeToRigidBody()
-    elif transform_mode == 'similarity':
+    elif transform_mode == "similarity":
         icp.GetLandmarkTransform().SetModeToSimilarity()
     else:
-        raise('Error invalid transform mode')
+        raise ("Error invalid transform mode")
     icp.SetTarget(target)
     icp.SetSource(source)
     icp.SetMaximumNumberOfIterations(numberOfIterations)
@@ -35,11 +37,11 @@ def apply_transform(source, transform):
     return transform_filter.GetOutput()
 
 
-def get_node_curvatures(vtk_mesh, curvature_type='min'):
+def get_node_curvatures(vtk_mesh, curvature_type="min"):
     curvature = vtk.vtkCurvatures()
-    if curvature_type == 'min':
+    if curvature_type == "min":
         curvature.SetCurvatureTypeToMinimum()
-    elif curvature_type == 'max':
+    elif curvature_type == "max":
         curvature.SetCurvatureTypeToMaximum()
     curvature.SetInputData(vtk_mesh)
     curvature.Update()
@@ -47,16 +49,24 @@ def get_node_curvatures(vtk_mesh, curvature_type='min'):
 
 
 def get_max_curvature(vtk_mesh):
-    return [vtk_to_numpy(get_node_curvatures(vtk_mesh, curvature_type='max').GetPointData().GetScalars()),]
+    return [
+        vtk_to_numpy(
+            get_node_curvatures(vtk_mesh, curvature_type="max").GetPointData().GetScalars()
+        ),
+    ]
 
 
 def get_min_curvature(vtk_mesh):
-    return [vtk_to_numpy(get_node_curvatures(vtk_mesh, curvature_type='min').GetPointData().GetScalars()),]
+    return [
+        vtk_to_numpy(
+            get_node_curvatures(vtk_mesh, curvature_type="min").GetPointData().GetScalars()
+        ),
+    ]
 
 
 def get_min_max_curvature_values(vtk_mesh):
-    min_curvatures = get_node_curvatures(vtk_mesh, curvature_type='min')
-    max_curvatures = get_node_curvatures(vtk_mesh, curvature_type='max')
+    min_curvatures = get_node_curvatures(vtk_mesh, curvature_type="min")
+    max_curvatures = get_node_curvatures(vtk_mesh, curvature_type="max")
 
     min_curvature_values = vtk_to_numpy(min_curvatures.GetPointData().GetScalars())
     max_curvature_values = vtk_to_numpy(max_curvatures.GetPointData().GetScalars())

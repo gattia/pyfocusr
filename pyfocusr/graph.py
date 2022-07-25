@@ -1,45 +1,52 @@
 import numpy as np
-from scipy.sparse.linalg import eigs
+from itkwidgets import Viewer
 from scipy import sparse
+from scipy.sparse.linalg import eigs
+
 # import vtk
 from vtk.util.numpy_support import numpy_to_vtk
+
 from .vtk_functions import *
-from itkwidgets import Viewer
-features_dictionary = {'curvature': get_min_max_curvature_values,
-                       'min_curvature': get_min_curvature,
-                       'max_curvature': get_max_curvature}
+
+features_dictionary = {
+    "curvature": get_min_max_curvature_values,
+    "min_curvature": get_min_curvature,
+    "max_curvature": get_max_curvature,
+}
 
 
 class Graph(object):
-    def __init__(self,
-                 vtk_mesh,
-                 n_spectral_features=3,
-                 norm_eig_vecs=True,
-                 n_rand_samples=10000,
-                 list_features_to_calc=[],
-                 list_features_to_get_from_mesh=[],
-                 feature_weights=None,
-                 include_features_in_adj_matrix=False,
-                 include_features_in_G_matrix=False,
-                 G_matrix_p_function='exp',
-                 norm_node_features_std=True,
-                 norm_node_features_cap_std=3,
-                 norm_node_features_0_1=True,
-                 ):
+    def __init__(
+        self,
+        vtk_mesh,
+        n_spectral_features=3,
+        norm_eig_vecs=True,
+        n_rand_samples=10000,
+        list_features_to_calc=[],
+        list_features_to_get_from_mesh=[],
+        feature_weights=None,
+        include_features_in_adj_matrix=False,
+        include_features_in_G_matrix=False,
+        G_matrix_p_function="exp",
+        norm_node_features_std=True,
+        norm_node_features_cap_std=3,
+        norm_node_features_0_1=True,
+    ):
 
         # Inputs
         self.vtk_mesh = vtk_mesh  # store mesh
-        self.n_spectral_features = n_spectral_features  # number of spectral features to extract.
-        self.norm_eig_vecs = norm_eig_vecs  # Bool - to normalize eigvecs or not. Option, but maybe shouldn't be.
-        self.feature_weights = feature_weights  # Prep feature weights (either set to be input, or create
+        self.n_spectral_features = n_spectral_features # number of spectral features to extract.
+        self.norm_eig_vecs = norm_eig_vecs # Bool - to normalize eigvecs or not.
+    
+        self.feature_weights = feature_weights  # Prep feature weights
         if feature_weights is None:
             self.feature_weights = np.eye(self.n_extra_features)
         else:
             self.feature_weights = feature_weights
-        self.include_features_in_adj_matrix = include_features_in_adj_matrix  # Bool about including features in ajd.
-        self.include_features_in_G_matrix = include_features_in_G_matrix  # Bool about include features in G.
+        self.include_features_in_adj_matrix = include_features_in_adj_matrix # Bool, features in adj?
+        self.include_features_in_G_matrix = include_features_in_G_matrix  # Bool, include features in G
         self.G_matrix_p_function = G_matrix_p_function
-        #How to normmalize extra features.
+        # How to normmalize extra features.
         self.norm_node_features_std = norm_node_features_std
         self.norm_node_features_cap_std = norm_node_features_cap_std
         self.norm_node_features_0_1 = norm_node_features_0_1
@@ -57,7 +64,9 @@ class Graph(object):
         self.normed_points = (self.points - np.min(self.points, axis=0)) / self.mean_pts_scale_range
 
         # Assign matrices that will be used for laplacian and eigen decomposition.
-        self.adjacency_matrix = sparse.lil_matrix((vtk_mesh.GetNumberOfPoints(), vtk_mesh.GetNumberOfPoints()))
+        self.adjacency_matrix = sparse.lil_matrix(
+            (vtk_mesh.GetNumberOfPoints(), vtk_mesh.GetNumberOfPoints())
+        )
         self.degree_matrix = None
         self.degree_matrix_inv = None
         self.laplacian_matrix = None
@@ -79,24 +88,32 @@ class Graph(object):
                 if vtk_mesh.GetPointData().GetArray(idx).GetName() == feature:
                     break
                 elif idx == n - 1:
-                    print('NO SCALARS WITH SPECIFIED NAME')
+                    print("NO SCALARS WITH SPECIFIED NAME")
                     idx = np.nan
                     break
                 else:
                     pass
 
-            self.node_features += list([vtk_to_numpy(vtk_mesh.GetPointData().GetArray(idx)),])
+            self.node_features += list(
+                [
+                    vtk_to_numpy(vtk_mesh.GetPointData().GetArray(idx)),
+                ]
+            )
 
         # normalize the node features w/ options for how it is normalized.
-        self.norm_node_features(norm_using_std=self.norm_node_features_std,
-                                norm_range_0_to_1=self.norm_node_features_0_1,
-                                cap_std=self.norm_node_features_cap_std)
+        self.norm_node_features(
+            norm_using_std=self.norm_node_features_std,
+            norm_range_0_to_1=self.norm_node_features_0_1,
+            cap_std=self.norm_node_features_cap_std,
+        )
         self.n_extra_features = len(self.node_features)  # number of extra features used.
         # Get version of extra features that are scaled up to the
         self.mean_xyz_range_scaled_features = []
         if self.n_extra_features > 0:
             for ftr_idx in range(len(self.node_features)):
-                self.mean_xyz_range_scaled_features.append(self.node_features[ftr_idx] * self.mean_pts_scale_range)
+                self.mean_xyz_range_scaled_features.append(
+                    self.node_features[ftr_idx] * self.mean_pts_scale_range
+                )
 
     def norm_node_features(self, norm_using_std=True, norm_range_0_to_1=True, cap_std=3):
         """
@@ -109,26 +126,28 @@ class Graph(object):
         """
         for idx in range(len(self.node_features)):
             if norm_using_std is True:
-                self.node_features[idx] = (self.node_features[idx] - np.mean(self.node_features[idx])) \
-                                          / np.std(self.node_features[idx])
+                self.node_features[idx] = (
+                    self.node_features[idx] - np.mean(self.node_features[idx])
+                ) / np.std(self.node_features[idx])
                 if cap_std is not False:
                     self.node_features[idx][self.node_features[idx] > cap_std] = cap_std
                     self.node_features[idx][self.node_features[idx] < -cap_std] = -cap_std
 
             if norm_range_0_to_1 is True:
-                self.node_features[idx] = (self.node_features[idx] - np.min(self.node_features[idx]))\
-                                          / np.ptp(self.node_features[idx])
+                self.node_features[idx] = (
+                    self.node_features[idx] - np.min(self.node_features[idx])
+                ) / np.ptp(self.node_features[idx])
 
     """
     Functions to create matrices needed for laplacian and eigen decomposition. 
     """
 
     def get_weighted_adjacency_matrix(self):
-        '''
+        """
         Get/fill the adjacency matrix for the mesh vtk_mesh
         - Add options to enable adding the features
         :return:
-        '''
+        """
 
         n_cells = self.vtk_mesh.GetNumberOfCells()
         for cell_idx in range(n_cells):
@@ -145,14 +164,17 @@ class Graph(object):
                     for ftr_idx in range(self.n_extra_features):
                         # Append the "features" to the x/y/z position. Use features that have been scaled to be in
                         # the range of the max range axis of xyz.
-                        X_pt1 = np.concatenate((X_pt1, self.mean_xyz_range_scaled_features[ftr_idx][point_1, None]))
-                        X_pt2 = np.concatenate((X_pt2, self.mean_xyz_range_scaled_features[ftr_idx][point_2, None]))
+                        X_pt1 = np.concatenate(
+                            (X_pt1, self.mean_xyz_range_scaled_features[ftr_idx][point_1, None])
+                        )
+                        X_pt2 = np.concatenate(
+                            (X_pt2, self.mean_xyz_range_scaled_features[ftr_idx][point_2, None])
+                        )
 
-                distance = np.sqrt(np.sum(np.square(X_pt1 -
-                                                    X_pt2)))
-                self.adjacency_matrix[point_1, point_2] = 1. / distance
+                distance = np.sqrt(np.sum(np.square(X_pt1 - X_pt2)))
+                self.adjacency_matrix[point_1, point_2] = 1.0 / distance
 
-    def get_G_matrix(self, p_function='exp'):
+    def get_G_matrix(self, p_function="exp"):
         """
         Get G matrix for creating laplacian laplacian = G * (D-W)
         p_function options include:
@@ -167,13 +189,13 @@ class Graph(object):
             self.G = np.zeros(self.n_points)
             for k in range(self.n_extra_features):
                 # Add up the normalized node _
-                if p_function == 'exp':
+                if p_function == "exp":
                     G = np.exp(self.node_features[k])
-                elif p_function == 'log':
+                elif p_function == "log":
                     # use log function. Ensure that all values are above zero (make it 1 and up).
                     G = np.log(self.node_features[k] - np.min(self.node_features[k]) + 1)
-                elif p_function == 'square':
-                    G = self.node_features[k]**2
+                elif p_function == "square":
+                    G = self.node_features[k] ** 2
                 else:
                     # Otherwise, just ensure features are 0 and higher.
                     G = self.node_features[k] - np.min(self.node_features[k])
@@ -191,7 +213,7 @@ class Graph(object):
     def get_degree_matrix(self):
         self.degree_matrix = np.asarray(self.adjacency_matrix.sum(axis=1))
         self.degree_matrix = sparse.diags(self.degree_matrix[:, 0])
-        self.degree_matrix_inv = sparse.diags((self.degree_matrix.diagonal() + 1e-8)**-1)
+        self.degree_matrix_inv = sparse.diags((self.degree_matrix.diagonal() + 1e-8) ** -1)
 
     def get_laplacian_matrix(self):
         # Ensure that G is defined.
@@ -213,19 +235,23 @@ class Graph(object):
         # The sparse versions are even faster than using eigh on a dense matrix.
         # Therefore, use sparse matrices for all circumstances.
         # laplacian_sparse = sparse.csc_matrix(self.laplacian_matrix)
-        print('Beginning Eigen Decomposition')
+        print("Beginning Eigen Decomposition")
 
-        self.eig_vals, self.eig_vecs = recursive_eig(self.laplacian_matrix,
-                                           k=self.n_spectral_features + 1,
-                                           n_k_needed=self.n_spectral_features,
-                                           k_buffer=1)
+        self.eig_vals, self.eig_vecs = recursive_eig(
+            self.laplacian_matrix,
+            k=self.n_spectral_features + 1,
+            n_k_needed=self.n_spectral_features,
+            k_buffer=1,
+        )
 
-        print('All final eigenvalues are: \n{}'.format(self.eig_vals))
-        print('-' * 72)
-        print('Final eigenvalues of interest are: \n{}'.format(self.eig_vals))
+        print("All final eigenvalues are: \n{}".format(self.eig_vals))
+        print("-" * 72)
+        print("Final eigenvalues of interest are: \n{}".format(self.eig_vals))
 
         if self.norm_eig_vecs is True:
-            self.eig_vecs = (self.eig_vecs - np.min(self.eig_vecs, axis=0)) / np.ptp(self.eig_vecs, axis=0) - 0.5
+            self.eig_vecs = (self.eig_vecs - np.min(self.eig_vecs, axis=0)) / np.ptp(
+                self.eig_vecs, axis=0
+            ) - 0.5
 
     """
     Get sub samples/measurements from/of eigenvectors or characteristics about them. 
@@ -238,8 +264,9 @@ class Graph(object):
         return self.eig_vecs[self.rand_idxs, :]
 
     def get_rand_normalized_points(self):
-        return (self.points[self.rand_idxs, :] - np.min(self.points[self.rand_idxs, :], axis=0)) \
-               / np.ptp(self.points[self.rand_idxs, :], axis=0)
+        return (
+            self.points[self.rand_idxs, :] - np.min(self.points[self.rand_idxs, :], axis=0)
+        ) / np.ptp(self.points[self.rand_idxs, :], axis=0)
 
     def get_list_rand_idxs(self, n_rand_samples, replace=False, force_randomization=False):
         """
@@ -264,22 +291,23 @@ class Graph(object):
     """
 
     def view_mesh_existing_scalars(self):
-        plotter = Viewer(geometries=[self.vtk_mesh]
-                         )
+        plotter = Viewer(geometries=[self.vtk_mesh])
         return plotter
 
     def view_mesh_eig_vec(self, eig_vec=0):
         tmp_mesh = vtk_deep_copy(self.vtk_mesh)
-        tmp_mesh.GetPointData().SetScalars(numpy_to_vtk(np.ascontiguousarray(self.eig_vecs[:, eig_vec])))
-        plotter = Viewer(geometries=[tmp_mesh]
-                         )
+        tmp_mesh.GetPointData().SetScalars(
+            numpy_to_vtk(np.ascontiguousarray(self.eig_vecs[:, eig_vec]))
+        )
+        plotter = Viewer(geometries=[tmp_mesh])
         return plotter
 
     def view_mesh_features(self, feature_idx=0):
         tmp_mesh = vtk_deep_copy(self.vtk_mesh)
-        tmp_mesh.GetPointData().SetScalars(numpy_to_vtk(np.ascontiguousarray((self.node_features[feature_idx]))))
-        plotter = Viewer(geometries=[tmp_mesh]
-                         )
+        tmp_mesh.GetPointData().SetScalars(
+            numpy_to_vtk(np.ascontiguousarray((self.node_features[feature_idx])))
+        )
+        plotter = Viewer(geometries=[tmp_mesh])
         return plotter
 
     """
@@ -315,7 +343,7 @@ class Graph(object):
         :param iterations:
         :return:
         """
-        D_inv = sparse.diags(1. / (1 + np.asarray(self.adjacency_matrix.sum(axis=1))[:, 0]))
+        D_inv = sparse.diags(1.0 / (1 + np.asarray(self.adjacency_matrix.sum(axis=1))[:, 0]))
         out_values = values
         average_mat = D_inv @ (self.adjacency_matrix + sparse.eye(self.adjacency_matrix.shape[0]))
         for iteration in range(iterations):
@@ -323,7 +351,7 @@ class Graph(object):
         return out_values
 
 
-def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
+def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which="LM"):
     """
     Recursive function to iteratively get eigs until have enough to get fiedler + n_k_needed @ minimum.
     If one final
@@ -337,17 +365,16 @@ def recursive_eig(matrix, k, n_k_needed, k_buffer=1, sigma=1e-10, which='LM'):
     """
     MIN_EIG_VAL = 1e-10
 
-    print('Starting!')
-    eig_vals, eig_vecs = eigs(matrix, k=k, sigma=sigma, which=which, ncv=4*k)
-    
+    print("Starting!")
+    eig_vals, eig_vecs = eigs(matrix, k=k, sigma=sigma, which=which, ncv=4 * k)
+
     n_good_eigen_vals = sum(eig_vals > MIN_EIG_VAL)
 
     if n_good_eigen_vals < n_k_needed:
-        print('Not enough eigenvalues found, trying again with more eigenvalues!')
+        print("Not enough eigenvalues found, trying again with more eigenvalues!")
         k += k_buffer + n_k_needed
         eig_vals, eig_vecs = recursive_eig(matrix, k, n_k_needed, k_buffer, sigma, which)
 
-    
     eig_keep = np.where(eig_vals > MIN_EIG_VAL)[0]
 
     eig_vals = eig_vals[eig_keep]
