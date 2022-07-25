@@ -51,33 +51,33 @@ jobs:
 
   # BUILD WHEELS ONLY NEEDED FOR NON-PURE PYTHON PACKAGES
   # This is described here: https://packaging.python.org/en/latest/overview/#python-binary-distributions
-  build_wheels:
-    name: Build wheels
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-2019, macos-latest]     
+  # build_wheels:
+  #   name: Build wheels
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-latest, windows-2019, macos-latest]     
     
-    steps:
-      - uses: actions/checkout@v3
+  #   steps:
+  #     - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v3
-        name: Install Python
-        with:
-          python-version: '3.7'
+  #     - uses: actions/setup-python@v3
+  #       name: Install Python
+  #       with:
+  #         python-version: '3.7'
       
-      - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.7.0
+  #     - name: Install cibuildwheel
+  #       run: python -m pip install cibuildwheel==2.7.0
 
-      - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
+  #     - name: Build wheels
+  #       run: python -m cibuildwheel --output-dir wheelhouse
 
-      # - name: Build wheels
-      #   uses: pypa/cibuildwheel@v2.2.2
+  #     # - name: Build wheels
+  #     #   uses: pypa/cibuildwheel@v2.2.2
       
-      - uses: actions/upload-artifact@v3
-        with:
-            path: ./wheelhouse/*.whl
+  #     - uses: actions/upload-artifact@v3
+  #       with:
+  #           path: ./wheelhouse/*.whl
   
   upload_pypi:
     needs: [build_sdist] #build_wheels
