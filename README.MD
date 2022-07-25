@@ -21,24 +21,16 @@ This package will find correspondence between points on two surfaces using spect
 
 # Installation
 It is recommended that installtion is performed in a new environment. 
-```
-conda create --name focusr python=3.7
-```
 
-```
-Next, pull and install pyfocusr
-```
-cd ..
+```bash
+conda create --name focusr python=3.7
 git clone https://github.com/gattia/pyfocusr
 cd pyfocusr
 
-### install dependencies
-```bash
+# install dependencies
 make requirements
-```
 
-### install pyfocusr
-```bash
+# install pyfocusr
 make install
 ```
 
