@@ -23,14 +23,14 @@ install-dev:
 	pip install --editable .
 
 dev:
-	pip install --upgrade pytest black isort wheel pdoc3 coverage build
+	python -m pip install --upgrade -r requirements-dev.txt
 
 dev-mamba:
-	mamba install pytest black isort wheel pdoc3 coverage build
+	mamba install --file requirements-dev.txt
 
 dev-conda:
-	conda install pytest black isort wheel pdoc3 coverage build
-
+	conda install --file requirements-dev.txt
+	
 docs:
 	pdoc --output-dir docs/ --html --force pyfocusr
 	mv docs/pyfocusr/* docs/
