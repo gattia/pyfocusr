@@ -2,9 +2,12 @@
 
 requirements:
 	python -m pip install -r requirements.txt
-# alternatively... 
-# python -m pip install cycpd
+
+# alternatively
 # conda install -c conda-forge --file requirements.txt
+# python -m pip install -r requirements-pip.txt
+	
+
 
 # requirements-mamba:
 # 	mamba install --file requirements.txt
