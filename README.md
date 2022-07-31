@@ -1,6 +1,6 @@
 # PyFOCUSR
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)<br>
-![Build Status](https://github.com/gattia/pyfocusrbran/actions/workflows/build-test.yml/badge.svg?branch=master)<br>
+![Build Status](https://github.com/gattia/pyfocusr/actions/workflows/build-test.yml/badge.svg?branch=master)<br>
 |[Documentation](https://anthonygattiphd.com/pyfocusr/)|
 
 Python implementation of the FOCUSR <br>
