@@ -21,7 +21,11 @@ jobs:
       - uses: actions/setup-python@v3
 
       # ADJUST THIS: install all dependencies (including pdoc)
-      - run: make requirements dev
+      # install ninja-build because its required for itk install 
+      # https://stackoverflow.com/questions/59086665/pycharm-unable-to-install-itk-package-cmake-gives-an-error
+      - run: |
+        apt-get install ninja-build
+        make requirements dev
       # ADJUST THIS: build your documentation into docs/.
       - run: make docs
       # We use a custom build script for pdoc itself, ideally you just run `pdoc -o docs/ ...` here.
