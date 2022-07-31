@@ -1,4 +1,7 @@
 # PyFOCUSR
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)<br>
+![Build Status](https://github.com/gattia/pyfocusrbran/actions/workflows/build-test.yml/badge.svg?branch=master)<br>
+|[Documentation](https://anthonygattiphd.com/pyfocusr/)|
 
 Python implementation of the FOCUSR <br>
 FOCUSR = Feature Oriented Correspondence using Spectral Regularization and is described in [1]. 
@@ -41,23 +44,24 @@ Jupyter notebook *Example_registering_two_bone_meshes*  in /examples shows exten
 ### Spectral coordinates
 Normalized spectral coordinates (eigenvectors) are calculated for each mesh. Below shows examples for the first 3 eigenvectors. 
 
+
 | *Eigen Vector 1 - Fiedler vector*    | *Eigen Vector 2*           | *Eigen Vector 3*           |
 | :---:                               | :---:                      | :---:                      |
-|![](/images/eig_vec_1_fiedler.png)   | ![](/images/eig_vec_2.png) | ![](/images/eig_vec_3.png) |
+|![](https://raw.githubusercontent.com/gattia/pyfocusr/master/images/eig_vec_1_fiedler.png)   | ![](https://raw.githubusercontent.com/gattia/pyfocusr/master/images/eig_vec_2.png) | ![](https://raw.githubusercontent.com/gattia/pyfocusr/master/images/eig_vec_3.png) |
 
 
 Next, the spectral coordinates (eigenvectors) for each node of the mesh (shown above) are used as xyz positions and are aligned. 
 #### 
-![](/images/ezgif.com-gif-maker.gif)
+![](https://raw.githubusercontent.com/gattia/pyfocusr/master/images/ezgif.com-gif-maker.gif)
 
 
 The following includes the meshes at various steps of the registration process as well as one mesh calculated as the average of the source & target. 
 
 |*Source Mesh* | *Target Mesh* |
 |:---:       |:---:        |
-|![](/images/source.png)   | ![](/images/target.png) |
+|![](https://raw.githubusercontent.com/gattia/pyfocusr/master/images/source.png)   | ![](https://raw.githubusercontent.com/gattia/pyfocusr/master/images/target.png) |
 |*Source Transformed to Target*               | *Average Mesh*                |
-| ![](/images/mesh_transformed_to_target.png) | ![](/images/average_mesh.png) |
+| ![](https://raw.githubusercontent.com/gattia/pyfocusr/master/images/mesh_transformed_to_target.png) | ![](https://raw.githubusercontent.com/gattia/pyfocusr/master/images/average_mesh.png) |
 
 
 MIT License.
