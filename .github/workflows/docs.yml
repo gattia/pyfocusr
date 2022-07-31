@@ -28,7 +28,6 @@ jobs:
           sudo apt-get install ninja-build
           python -m pip install --upgrade pip
           make dev
-          make requirements
       # ADJUST THIS: build your documentation into docs/.
       - run: make docs
       # We use a custom build script for pdoc itself, ideally you just run `pdoc -o docs/ ...` here.
