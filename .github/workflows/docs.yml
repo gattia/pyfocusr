@@ -25,6 +25,7 @@ jobs:
       # https://stackoverflow.com/questions/59086665/pycharm-unable-to-install-itk-package-cmake-gives-an-error
       - name: Install dependencies
         run: |
+          apt-get install ninja-build
           python -m pip install --upgrade pip
           make dev
           make requirements
