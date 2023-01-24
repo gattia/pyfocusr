@@ -123,6 +123,7 @@ class Focusr(object):
                         target=vtk_mesh_target, source=vtk_mesh_source, transform_mode="similarity"
                     )
                 vtk_mesh_source = apply_transform(source=vtk_mesh_source, transform=icp)
+            self._icp_transform = icp
         print("Starting to build first graph")
         # Build target graph
         self.graph_target = Graph(
