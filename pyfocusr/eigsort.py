@@ -20,7 +20,6 @@ class eigsort(object):
         # to match target. If `False`, then source order used as reference and
         # target is permuted.
     ):
-
         # Input variables
 
         self.graph_target = graph_target  # Target mesh (match source eigs to this)

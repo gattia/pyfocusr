@@ -647,7 +647,6 @@ class Focusr(object):
         include_unaligned=False,
         upscale_factor=10.0,
     ):
-
         point_sets = []
 
         if include_target_coordinates is True:

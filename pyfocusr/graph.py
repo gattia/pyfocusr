@@ -32,7 +32,6 @@ class Graph(object):
         norm_node_features_cap_std=3,
         norm_node_features_0_1=True,
     ):
-
         # Inputs
         self.vtk_mesh = vtk_mesh  # store mesh
         self.n_spectral_features = n_spectral_features  # number of spectral features to extract.
