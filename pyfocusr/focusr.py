@@ -779,7 +779,7 @@ class Focusr(object):
 
         plotter = Viewer(geometries=geometries, shadow=shadow)
         return plotter
-    
+
     @property
     def icp_transform(self):
         """
