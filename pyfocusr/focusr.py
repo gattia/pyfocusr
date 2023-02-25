@@ -2,7 +2,11 @@ import time
 
 import cycpd
 import numpy as np
-from itkwidgets import Viewer
+try:
+    from itkwidgets import Viewer
+except:
+    print('Error importing Viewer from itkwidgets.')
+    Viewer = None
 from matplotlib import colors
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial import KDTree
@@ -647,6 +651,10 @@ class Focusr(object):
         include_unaligned=False,
         upscale_factor=10.0,
     ):
+        if Viewer is None:
+            raise ImportError(
+                "Viewer from itkwidgets not imported properly - cant view."
+            )
         point_sets = []
 
         if include_target_coordinates is True:
@@ -723,6 +731,11 @@ class Focusr(object):
         return plotter
 
     def view_aligned_smoothed_spectral_coords(self):
+        if Viewer is None:
+            raise ImportError(
+                "Viewer from itkwidgets not imported properly - cant view."
+            )
+
         plotter = Viewer(
             point_sets=[self.smoothed_target_coords, self.source_projected_on_target],
             point_set_colors=[colors.to_rgb("C0"), colors.to_rgb("C1")],
@@ -737,6 +750,11 @@ class Focusr(object):
         include_average=False,
         shadow=True,
     ):
+        if Viewer is None:
+            raise ImportError(
+                "Viewer from itkwidgets not imported properly - cant view."
+            )
+            
         geometries = []
         if include_target is True:
             geometries.append(self.graph_target.vtk_mesh)
