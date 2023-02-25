@@ -2,10 +2,11 @@ import time
 
 import cycpd
 import numpy as np
+
 try:
     from itkwidgets import Viewer
 except:
-    print('Error importing Viewer from itkwidgets.')
+    print("Error importing Viewer from itkwidgets.")
     Viewer = None
 from matplotlib import colors
 from scipy.optimize import linear_sum_assignment
@@ -652,9 +653,7 @@ class Focusr(object):
         upscale_factor=10.0,
     ):
         if Viewer is None:
-            raise ImportError(
-                "Viewer from itkwidgets not imported properly - cant view."
-            )
+            raise ImportError("Viewer from itkwidgets not imported properly - cant view.")
         point_sets = []
 
         if include_target_coordinates is True:
@@ -732,9 +731,7 @@ class Focusr(object):
 
     def view_aligned_smoothed_spectral_coords(self):
         if Viewer is None:
-            raise ImportError(
-                "Viewer from itkwidgets not imported properly - cant view."
-            )
+            raise ImportError("Viewer from itkwidgets not imported properly - cant view.")
 
         plotter = Viewer(
             point_sets=[self.smoothed_target_coords, self.source_projected_on_target],
@@ -751,10 +748,8 @@ class Focusr(object):
         shadow=True,
     ):
         if Viewer is None:
-            raise ImportError(
-                "Viewer from itkwidgets not imported properly - cant view."
-            )
-            
+            raise ImportError("Viewer from itkwidgets not imported properly - cant view.")
+
         geometries = []
         if include_target is True:
             geometries.append(self.graph_target.vtk_mesh)
