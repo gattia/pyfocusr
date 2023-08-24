@@ -309,6 +309,7 @@ class Focusr(object):
                     "tolerance": self.non_rigid_tolerance,
                     "alpha": self.non_rigid_alpha,
                     "beta": self.non_rigid_beta,
+                    "print_reg_params": self.verbose
                 }
             )
             _, self.non_rigid_params = reg.register()
